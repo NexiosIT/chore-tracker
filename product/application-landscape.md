@@ -5,7 +5,7 @@
 Chore Tracker has two deployable parts that live together in one code repository, `NexiosIT/chore-tracker-code`. This product hub (`NexiosIT/chore-tracker`) holds the specs and is kept separate from the code.
 
 - **chore-tracker-app** is a Flutter app for Android 10 and newer. Parents and kids both use it. It talks to the backend over a REST/JSON API. It schedules local Android notifications itself for chores that are due soon, and it runs a background check against the API (roughly every 15 minutes, as Android allows) to pick up new chores, approvals and completions.
-- **chore-tracker-api** is a Kotlin Spring Boot 3.5.x service. It owns all business rules: family members and registrations, chores and templates, points, exchange rates and redemptions, and notifications. It stores its data in PostgreSQL through Spring Data JPA, with Flyway migrations.
+- **chore-tracker-api** is a Kotlin Spring Boot 4.0 service. It owns all business rules: family members and registrations, chores and templates, points, exchange rates and redemptions, and notifications. It stores its data in PostgreSQL through Spring Data JPA, with Flyway migrations.
 
 ```mermaid
 flowchart LR
