@@ -1,0 +1,169 @@
+name: Iron Dome
+on:
+  pull_request:
+    paths:
+      # specs/ and screens/ select the spec-integrity half below, which is scoped
+      # to the features a PR touches. features/ and standards/ are here for the
+      # identity half, which is hub-wide and unscoped: a duplicate FT or STD
+      # changes no spec file at all, so without these two lines the uniqueness
+      # check this workflow promises as a PR gate never fires for those series.
+      - 'specs/**'
+      - 'screens/**'
+      - 'features/**'
+      - 'standards/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
+jobs:
+  integrity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      # Hub-wide, and deliberately unconditional. Every other step
+      # in this job is scoped to the features a PR touches; this one cannot be,
+      # because the duplicate it looks for is precisely what makes "which feature
+      # does this id mean?" unanswerable. It runs BEFORE the feature scan below
+      # for the same reason: that scan resolves manifests by id, so a duplicated
+      # FT would have it reading an arbitrary one.
+      #
+      # `ie doctor` is used rather than `ie integrity check` because the latter
+      # requires a feature id, and three of the four series (FT, STD, and a UC no
+      # active manifest references) have no feature to hang the check on. Its exit
+      # code is ignored on purpose — doctor reports drift, workspace and foundation
+      # findings too, and none of those are this gate's business. The verdict comes
+      # only from `.data.identity`.
+      - name: Check identifier uniqueness
+        run: |
+          RESULT=$(ie doctor --json) || true
+          COUNT=$(echo "$RESULT" | jq -r '.data.identity.summary.duplicates // "unknown"' 2>/dev/null || echo "unknown")
+          # Empty output (ie missing, OOM, died before printing) leaves COUNT empty —
+          # jq on empty input exits 0 with no output. Treat that as a failure, never
+          # as a pass, so a crashed check cannot read as a clean hub.
+          if [ -z "$COUNT" ]; then COUNT="unknown"; fi
+          if [ "$COUNT" = "unknown" ]; then
+            echo "$RESULT"
+            echo "::error::Could not check identifier uniqueness — ie doctor produced no identity result (see log above)."
+            exit 1
+          fi
+          if [ "$COUNT" != "0" ]; then
+            # Printed through jq rather than interpolated into the ::error:: line:
+            # the paths come from PR-controlled filenames (script-injection hardening).
+            echo "Duplicated identifiers:"
+            echo "$RESULT" | jq -r '.data.identity.duplicates[] | "  \(.kind) \(.id): \(.paths | join(", "))"'
+            echo "::error::${COUNT} duplicated identifier(s). Every command that resolves one of these picks an artifact arbitrarily. See \"Renumbering a duplicated id\" in product-hub-docs/WORKFLOW.md."
+            exit 1
+          fi
+          echo "Every id is used once."
+
+      - name: Identify affected features
+        id: feature
+        run: |
+          # Find all active features whose spec_changes reference the modified specs
+          CHANGED_SPECS=$(git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | grep '^specs/' | sed 's|/[^/]*$||' | sort -u)
+          FEATURE_IDS=""
+          # Two globs, not one: a post-delivery fix lives one level deeper, at
+          # features/active/post-delivery-defect/FIX-NNN-<slug>/,
+          # and a glob that misses it fails SILENTLY — the loop simply never sees
+          # the fix. The `[ -f ]` guard below already absorbs a glob that matches
+          # nothing, so the deeper pattern is safe on a hub with no fixes.
+          for manifest in features/active/*/manifest.yml features/active/*/*/manifest.yml; do
+            [ -f "$manifest" ] || continue
+            for spec_path in $CHANGED_SPECS; do
+              if grep -q "$spec_path" "$manifest" 2>/dev/null; then
+                FID=$(grep '^id:' "$manifest" | head -1 | awk '{print $2}' | tr -d '"')
+                if [ -n "$FID" ] && ! echo "$FEATURE_IDS" | grep -q "$FID"; then
+                  FEATURE_IDS="${FEATURE_IDS}${FID}"$'\n'
+                fi
+                break  # Move to next manifest once matched
+              fi
+            done
+          done
+          FEATURE_IDS=$(echo "$FEATURE_IDS" | sed '/^$/d')
+          echo "feature_ids<<EOF" >> $GITHUB_OUTPUT
+          echo "$FEATURE_IDS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Iron Dome
+        if: steps.feature.outputs.feature_ids != ''
+        id: iron_dome
+        # feature_ids is derived from PR-controlled manifest content — env: only,
+        # never raw ${{ }} in the script (script-injection hardening).
+        env:
+          FEATURE_IDS: ${{ steps.feature.outputs.feature_ids }}
+        run: |
+          OVERALL_GRADE="clean"
+          ALL_RESULTS=""
+          while IFS= read -r feature_id; do
+            [ -z "$feature_id" ] && continue
+            echo "=== Checking feature: $feature_id ==="
+            # Tolerate the command's non-zero exit (a conflict grade exits 1) so the
+            # runner's default `set -e` does not abort here, before we echo the report
+            # and parse the grade. The grade in the JSON is the authoritative signal.
+            RESULT=$(ie integrity check "$feature_id" --json) || true
+            echo "$RESULT"
+            GRADE=$(echo "$RESULT" | jq -r '.data.grade // "unknown"' 2>/dev/null || echo "unknown")
+            # Empty output (a hard crash: ie missing, OOM, died before printing) leaves
+            # GRADE empty — jq on empty input exits 0 with no output. Treat as a failure.
+            if [ -z "$GRADE" ]; then GRADE="unknown"; fi
+            ALL_RESULTS="${ALL_RESULTS}${feature_id}:${GRADE}"$'\n'
+            if [ "$GRADE" = "conflict" ]; then
+              OVERALL_GRADE="conflict"
+            elif [ "$GRADE" = "unknown" ]; then
+              # No parseable grade => the command errored (crash / bad manifest). Surface it.
+              echo "::error::ie integrity check errored for $feature_id (no grade in output — see log above)."
+              if [ "$OVERALL_GRADE" != "conflict" ]; then OVERALL_GRADE="error"; fi
+            elif [ "$GRADE" = "warning" ] && [ "$OVERALL_GRADE" != "conflict" ]; then
+              OVERALL_GRADE="warning"
+            fi
+          done <<< "$FEATURE_IDS"
+          echo "grade=$OVERALL_GRADE" >> $GITHUB_OUTPUT
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          echo "$ALL_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          # Fail on conflicts or on a command error — never let a non-clean result pass silently.
+          if [ "$OVERALL_GRADE" = "conflict" ]; then
+            echo "::error::Iron Dome detected spec conflicts. Resolve before merging."
+            exit 1
+          elif [ "$OVERALL_GRADE" = "error" ]; then
+            echo "::error::Iron Dome could not complete — ie integrity check errored. See log above."
+            exit 1
+          fi
+
+      - name: Post Iron Dome results
+        if: always() && steps.feature.outputs.feature_ids != ''
+        uses: actions/github-script@v8
+        # Outputs reach the script as env vars, never via ${{ }} inside the JS
+        # source — a hostile value could otherwise escape the string literal
+        # and run JS with this job's token (script-injection hardening).
+        env:
+          GRADE: ${{ steps.iron_dome.outputs.grade }}
+          FEATURE_IDS: ${{ steps.feature.outputs.feature_ids }}
+        with:
+          script: |
+            const grade = process.env.GRADE || '';
+            const icon = grade === 'clean' ? '✅' : grade === 'warning' ? '⚠️' : '🛑';
+            const features = (process.env.FEATURE_IDS || '').trim();
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Iron Dome — Spec Integrity\n\n${icon} Overall grade: **${grade.toUpperCase()}**\n\nFeatures checked: ${features.split('\n').join(', ')}\n\nSee workflow logs for full report.`
+            });

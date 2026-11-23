@@ -1,0 +1,126 @@
+name: Runtime Parity
+on:
+  pull_request:
+    paths:
+      - 'config.yml'
+      - '.claude/**'
+      - '.github/agents/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
+# Runtime parity gate. Asserts that every capability emits an artifact
+# for every runtime this hub enables (config.yml `runtimes:`), or carries a
+# reviewed `unsupported` waiver — the "all changes implemented for all runtimes"
+# guarantee — and that the expected artifacts are present on disk. Warn by
+# default; set the repo/org variable RUNTIME_PARITY_BLOCKING=true to fail the PR
+# (mirrors DESIGN_SYSTEM_BLOCKING / SPEC_DRIFT_BLOCKING).
+jobs:
+  runtime-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        # Pin to the version this hub was last synced to (.ie/scaffold.json
+        # cli_version), so a NEWER published CLI never red-flags an unrelated PR:
+        # `ie runtime verify` compares the CLI's bundled scaffold against the hub's
+        # committed tree, and that comparison is only meaningful at the synced
+        # version. Falls back to latest when the manifest is absent (an older hub,
+        # created before the scaffold recorded the CLI version).
+        run: |
+          VERSION="$(jq -r '.cli_version // empty' .ie/scaffold.json 2>/dev/null || true)"
+          if [ -n "$VERSION" ]; then
+            echo "Pinning @rp-flow/ie-cli@$VERSION (hub's synced version)"
+            npm install -g "@rp-flow/ie-cli@$VERSION"
+          else
+            echo "No manifest cli_version found — installing latest"
+            npm install -g @rp-flow/ie-cli
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Runtime parity check
+        id: parity
+        run: |
+          set +e
+          ie runtime verify --json > parity.json
+          CODE=$?
+          set -e
+          cat parity.json
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+
+      # One comment per PR, updated in place, carrying the findings only; the
+      # full report stays in the job log. Built from `--json`, never by
+      # matching the CLI's human-readable text.
+      - name: Post results as PR comment
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          # Pass step outputs through env, NOT `${{ }}` interpolation into the
+          # script body: the output carries repo-controlled strings (capability
+          # names, paths). Env values and file contents are read as data.
+          RP_CODE: ${{ steps.parity.outputs.code }}
+          RP_BLOCKING: ${{ vars.RUNTIME_PARITY_BLOCKING }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- ie:runtime-parity -->';
+            const code = process.env.RP_CODE;
+            const status = code === '0'
+              ? '✅ Every capability emits or is waived for all enabled runtimes'
+              : '⚠️ Runtime parity gap(s) found';
+            const blocking = process.env.RP_BLOCKING === 'true';
+            const enforce = code !== '0'
+              ? (blocking
+                  ? '\n\n**Blocking** — `RUNTIME_PARITY_BLOCKING=true`.'
+                  : '\n\nNon-blocking — set repo/org variable `RUNTIME_PARITY_BLOCKING=true` to enforce.')
+              : '';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let result;
+            try { result = JSON.parse(fs.readFileSync('parity.json', 'utf8')); } catch {}
+            const lines = [];
+            if (!result) {
+              lines.push('✗ ie runtime verify produced no readable result, see the run log');
+            } else if (!result.data) {
+              lines.push(`✗ ${result.error}`);
+            } else {
+              const d = result.data;
+              // In a product hub the sandbox palette's findings are advisory and
+              // arrive as a warning instead, so only the hub's own count here.
+              const gating = (all, sandbox) => d.sandbox.gating ? all : all.slice(0, all.length - sandbox.length);
+              for (const m of gating(d.missing, d.sandbox.missing)) {
+                lines.push(`✗ ${m.capability} has no emission and no waiver for runtime "${m.runtime}"`);
+              }
+              for (const v of gating(d.description_violations, d.sandbox.description_violations)) {
+                lines.push(`✗ ${v.capability} → ${v.path}: ${v.length} chars, over the Copilot limit of ${v.limit}`);
+              }
+            }
+            for (const w of result?.warnings ?? []) lines.push(`⚠ ${w}`);
+            const MAX_LINES = 25, MAX_CHARS = 4000;
+            let shown = lines.slice(0, MAX_LINES).join('\n');
+            if (shown.length > MAX_CHARS) shown = shown.slice(0, MAX_CHARS) + ' …';
+            const more = lines.length > MAX_LINES ? `\n… ${lines.length - MAX_LINES} more line(s) in the run log` : '';
+            const detail = shown ? '\n\n```\n' + shown + more + '\n```' : '';
+            const body = `${marker}\n## Runtime Parity\n\n${status}${enforce}${detail}\n\n[Run log](${run})`;
+            const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
+            const prev = comments.find(c => c.body?.includes(marker));
+            if (prev) await github.rest.issues.updateComment({ ...context.repo, comment_id: prev.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+
+      - name: Enforce if configured
+        if: steps.parity.outputs.code != '0' && vars.RUNTIME_PARITY_BLOCKING == 'true'
+        run: |
+          echo "::error::Runtime parity check failed (RUNTIME_PARITY_BLOCKING=true)"
+          exit 1

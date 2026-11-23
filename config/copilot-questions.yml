@@ -1,0 +1,177 @@
+# =============================================================================
+# Co-Pilot Question Catalog
+# =============================================================================
+# Proactive questions asked by the AI co-pilot during interactive spec
+# authoring. Derived from ShapeKit's lint rules — each post-hoc validation
+# check becomes a real-time question to catch ambiguity at the earliest
+# possible moment.
+#
+# Usage:
+#   The co-pilot selects 1-2 questions per section based on trigger
+#   conditions. Triggers are human-readable descriptions — the AI evaluates
+#   them against the current spec state. Questions are never blocking; the
+#   Definition Lead can defer any question and the gate will catch it.
+#
+# Priority:
+#   1 = high (likely to prevent a gate failure)
+#   2 = medium (improves spec quality)
+#   3 = low (nice to have, ask only if time permits)
+#
+# Schema: @rp-flow/ie-core/schemas/copilot-questions.schema.json (future — Layer 2)
+# =============================================================================
+
+version: "1.0.0"
+
+sections:
+
+  # ---------------------------------------------------------------------------
+  # CONTEXT — Asked during meta.yml authoring (Step 1)
+  # ---------------------------------------------------------------------------
+  context:
+    - id: "Q-CTX-01"
+      question: "Who is the primary actor? Are there secondary actors?"
+      trigger: "actor field is empty"
+      addresses: "Missing actor identification — required for goal statement and scenario structure"
+      priority: 1
+
+    - id: "Q-CTX-02"
+      question: "What must be true before this can execute? (auth, data, state)"
+      trigger: "preconditions list is empty"
+      addresses: "Missing preconditions — leads to incomplete Given steps in scenarios"
+      priority: 1
+
+    - id: "Q-CTX-03"
+      question: "What domain entities does this UC read or write?"
+      trigger: "entities list is empty"
+      addresses: "Missing entity identification — needed for contract design and cross-spec consistency"
+      priority: 1
+
+    - id: "Q-CTX-04"
+      question: "Does this UC call other UCs, or is it called by others?"
+      trigger: "dependencies.calls and dependencies.called_by are both empty"
+      addresses: "Missing dependency mapping — needed for DAG ordering and Iron Dome scoping"
+      priority: 2
+
+    - id: "Q-CTX-05"
+      question: "What is the primary API endpoint? (method + path)"
+      trigger: "endpoint field is empty"
+      addresses: "Missing endpoint — needed for contract authoring and service registry alignment"
+      priority: 1
+
+    - id: "Q-GRN-01"
+      question: "Does this entity have any business rule beyond field validation — a state transition, an authorization rule, a cross-entity invariant, a calculation? If YES, split into task-named UCs, one per actor-goal (register-customer, not create-customer). If NO (pure reference/lookup data), group its operations into ONE manage-{entity} UC (up to 5 standard operations). Which is it?"
+      trigger: "the UC slug is flagged by the task-naming gate G1-08 (a CRUD-verb prefix), or the entity looks like reference/lookup data, and the per-operation-vs-grouped boundary is unclear"
+      addresses: "Pure-CRUD carve-out boundary. The engine must not guess a decomposition — ask the human (bind-or-ask, generalized to boundaries). Record the answer as a one-line rationale in the feature's Key Decisions table."
+      priority: 1
+
+
+  # ---------------------------------------------------------------------------
+  # SCENARIOS — Asked during scenarios.feature authoring (Step 2)
+  # ---------------------------------------------------------------------------
+  scenarios:
+    - id: "Q-SCN-01"
+      question: "What if the {actor} tries this twice in quick succession?"
+      trigger: "no idempotency scenario exists"
+      addresses: "Missing idempotency handling — common source of production bugs"
+      priority: 2
+
+    - id: "Q-SCN-02"
+      question: "What happens when {key_input} is missing, empty, or malformed?"
+      trigger: "fewer than 2 error scenarios exist"
+      addresses: "Insufficient error coverage — every UC needs at minimum validation and not-found errors"
+      priority: 1
+
+    - id: "Q-SCN-03"
+      question: "Are there authorization rules? Can everyone do this?"
+      trigger: "no authorization scenario exists"
+      addresses: "Missing access control — if only certain roles can act, this must be a scenario"
+      priority: 1
+
+    - id: "Q-SCN-04"
+      question: "Boundary values? Min/max for numbers, length limits?"
+      trigger: "no boundary value scenario exists"
+      addresses: "Missing boundary testing — numeric limits, string lengths, collection sizes"
+      priority: 2
+
+    - id: "Q-SCN-05"
+      question: "Concurrent access? Two users doing this simultaneously?"
+      trigger: "UC involves write operations and no concurrency scenario exists"
+      addresses: "Missing concurrency handling — race conditions on shared state"
+      priority: 3
+
+    - id: "Q-SCN-06"
+      question: "Side effects? Emails, events, state changes elsewhere?"
+      trigger: "postconditions list has fewer than 2 entries"
+      addresses: "Missing side effect documentation — downstream systems need to know what changes"
+      priority: 2
+
+    - id: "Q-SCN-07"
+      question: "What if an external dependency is unavailable?"
+      trigger: "UC has dependencies and no timeout/unavailability scenario exists"
+      addresses: "Missing resilience scenarios — external service failures must be handled"
+      priority: 2
+
+
+  # ---------------------------------------------------------------------------
+  # CONTRACTS — Asked during contract.openapi.yml authoring (Step 3)
+  # ---------------------------------------------------------------------------
+  contracts:
+    - id: "Q-CTR-01"
+      question: "This has 'type: object' without properties — define the fields?"
+      trigger: "schema contains an opaque object (type: object with no properties)"
+      addresses: "Opaque schema — agents cannot generate code from untyped objects"
+      priority: 1
+
+    - id: "Q-CTR-02"
+      question: "What format is '{field}'? (string, number, date-time, uuid, enum?)"
+      trigger: "field is type string without a format or pattern constraint"
+      addresses: "Untyped string field — format/pattern needed for validation code generation"
+      priority: 2
+
+    - id: "Q-CTR-03"
+      question: "Valid values for '{field}'? Should it be an enum?"
+      trigger: "field appears to accept a fixed set of values"
+      addresses: "Missing enum constraint — prevents invalid value acceptance"
+      priority: 2
+
+    - id: "Q-CTR-04"
+      question: "Scenarios mention '{field}' but it's not in the contract — add it?"
+      trigger: "a field referenced in scenario steps is not present in the contract schema"
+      addresses: "Scenario-contract misalignment — scenarios define behavior that the contract cannot express"
+      priority: 1
+
+    - id: "Q-CTR-05"
+      question: "Is '{field}' required or optional? Default value?"
+      trigger: "field is not listed in required array and has no default value"
+      addresses: "Ambiguous optionality — agents need explicit required/optional to generate correct validation"
+      priority: 2
+
+
+  # ---------------------------------------------------------------------------
+  # FLOW — Asked during flow.mermaid authoring (Step 4)
+  # ---------------------------------------------------------------------------
+  flow:
+    - id: "Q-FLW-01"
+      question: "Multiple steps — would a sequence or state diagram help?"
+      trigger: "UC has 3+ steps in its scenarios and no flow diagram exists"
+      addresses: "Missing visual flow — complex multi-step UCs benefit from explicit state/sequence diagrams"
+      priority: 3
+
+    - id: "Q-FLW-02"
+      question: "Flow only shows happy path — include error paths?"
+      trigger: "flow diagram exists but contains no error branches"
+      addresses: "Incomplete flow — error paths should be visible for agent context during generation"
+      priority: 2
+
+
+  # ---------------------------------------------------------------------------
+  # COMPONENTS — Asked during screen component-tree authoring (Design Tokens).
+  # Screens are the sole spec artifact with a component tree (the UC-level
+  # components.yml is retired), so this is not part of UC shaping.
+  # ---------------------------------------------------------------------------
+  components:
+    - id: "Q-CMP-01"
+      question: "Hardcoded value '{value}' — should it reference a Design Token?"
+      trigger: "component tree contains non-token values (raw colors, pixel sizes, font names)"
+      addresses: "Token violation — all visual values must reference Design Tokens"
+      priority: 1

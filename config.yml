@@ -1,0 +1,93 @@
+# =============================================================================
+# Intent Engineering — Product Hub Configuration
+# =============================================================================
+# Project-wide configuration for the AI-Augmented SDLC.
+# Created during Phase 0 (Factory Setup) via `ie init`.
+#
+# Reference: CLAUDE.md
+# =============================================================================
+
+project:
+  name: Chore Tracker
+  organization: kbo
+  version: 0.1.0
+  methodology_version: '0.4'
+runtimes:
+  - claude
+integration_branch: main
+feature_branch_prefix: feature/
+fix_branch_prefix: fix/
+imp_branch_prefix: imp/
+bug_report_branch_prefix: bug-reports/
+apps:
+  - id: chore-tracker
+    display_name: Chore Tracker Web App
+    type: web
+naming:
+  use_case_prefix: UC
+  feature_prefix: FT
+  screen_prefix: SCR
+  id_padding: 3
+spec_statuses:
+  - draft
+  - ready
+  - implemented
+  - touched
+  - deprecated
+feature_statuses:
+  - shaping
+  - specified
+  - approved
+  - delivered
+  - archived
+generation:
+  default_strategy: incremental
+  checkpoints:
+    - name: Domain Model & Contracts
+      description: Data models, schemas, event definitions, repository interfaces, API/message contracts
+    - name: Domain Logic & Rules
+      description: Domain services, validation rules, business logic, aggregate behavior, state machines
+    - name: Interface Layer
+      description: API endpoints, event handlers, function entry points, middleware
+    - name: Presentation
+      description: UI components, pages, design token application, client-side state
+      optional: true
+    - name: Deployment Topology
+      description: Infrastructure-as-code, CI/CD configuration, deployment manifests
+  max_retries_per_checkpoint: 2
+  promotion:
+    established_threshold: 3
+    proven_threshold: 5
+    auto_demote_on_failure: true
+readiness:
+  ready_threshold: 80
+  needs_work_threshold: 60
+automation:
+  auto_archive_after_days: 14
+standards_categories:
+  - api
+  - nextjs
+  - spring-boot
+  - general
+  - nfr
+estimation:
+  sizes:
+    XS: null
+    S: null
+    M: null
+    L: null
+    XL: null
+hashing:
+  doc_only_keys:
+    - description
+    - summary
+    - example
+    - x-examples
+paths:
+  specs: specs
+  screens: screens
+  features_active: features/active
+  features_archive: features/archive
+  standards: standards
+  services: services
+  catalog: catalog.yml

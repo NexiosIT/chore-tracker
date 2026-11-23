@@ -1,0 +1,58 @@
+name: Manifest Assembly
+on:
+  repository_dispatch:
+    types: [feature-approved]
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      # client_payload comes from the dispatching repo and is attacker-influenceable
+      # (the code-repo CI derives feature_id from PR-controlled manifest content) —
+      # env: only, never raw ${{ }} in run: scripts (script-injection hardening).
+      - name: Assemble manifest
+        env:
+          FEATURE_ID: ${{ github.event.client_payload.feature_id }}
+        run: |
+          echo "Assembling manifest for $FEATURE_ID"
+          ie manifest assemble "$FEATURE_ID" --json > /tmp/assembled-manifest.json
+          cat /tmp/assembled-manifest.json
+
+      - name: Commit manifest
+        env:
+          FEATURE_ID: ${{ github.event.client_payload.feature_id }}
+        run: |
+          git config user.name "ie-cli[bot]"
+          git config user.email "ie-cli@users.noreply.github.com"
+          # A fix's manifest sits one level deeper. This step
+          # is inert either way — `ie manifest assemble` writes nothing, so the
+          # commit below is always empty — but a glob that silently skips one
+          # artifact kind is the same reader-less-write class this rail keeps
+          # removing, so it is widened rather than left half-right.
+          # TWO statements, not one `git add A B`: git treats a pathspec that matches
+          # nothing as fatal and stages NOTHING, so a single call with both globs
+          # staged nothing at all on the ordinary hub that has no fixes yet.
+          git add features/active/*/manifest.yml 2>/dev/null || true
+          git add features/active/*/*/manifest.yml 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "chore: assemble manifest for $FEATURE_ID"
+          git push

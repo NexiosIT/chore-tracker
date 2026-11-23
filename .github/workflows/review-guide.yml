@@ -1,0 +1,55 @@
+name: Review Guide
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# Splits the PR's changed files into what a reviewer must read (the authored
+# spec: scenarios, contracts, flows, constraints, decisions, screens, briefs)
+# and what the tooling usually writes (spec metadata and hashes, the catalog, compiled
+# runtime artifacts, workflows, local state). Advisory: one comment per PR,
+# updated in place, never a failing check. Anything not recognised as tooling
+# output is listed for review.
+jobs:
+  review-guide:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post review guide
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- ie:review-guide -->';
+            const skip = [
+              /^specs\/.*\/meta\.yml$/,
+              /^catalog\.yml$/,
+              /^\.claude\//,
+              /^\.github\//,
+              /^\.ie\//,
+            ];
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo, pull_number: context.issue.number, per_page: 100,
+            });
+            const isSkip = f => skip.some(re => re.test(f.filename));
+            const review = files.filter(f => !isSkip(f));
+            const skipped = files.filter(isSkip);
+            const MAX = 50;
+            const line = f => `- \`${f.filename}\`${f.status === 'removed' ? ' (removed)' : ''}`;
+            const list = (fs) => fs.slice(0, MAX).map(line).join('\n') +
+              (fs.length > MAX ? `\n- … ${fs.length - MAX} more in the Files tab` : '');
+            const body = [
+              marker,
+              '## Review Guide',
+              '',
+              review.length
+                ? `**Review these ${review.length} file(s)** — the authored spec:\n\n${list(review)}`
+                : 'Nothing authored to review: every changed file is usually tooling output.',
+              skipped.length
+                ? `\n<details><summary>${skipped.length} file(s) usually written by the tooling (metadata, hashes, catalog, compiled artifacts)</summary>\n\nA spec \`meta.yml\` can also carry a human decision: check any change to \`iron_dome_suppress\`, \`dependencies\` or \`service\`. A change under \`.github/workflows/\` or to \`.claude/settings*.json\` alters what CI or the agent is allowed to do: check it unless it came from \`ie update\`.\n\n${list(skipped)}\n\n</details>`
+                : '',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
+            const prev = comments.find(c => c.body?.includes(marker));
+            if (prev) await github.rest.issues.updateComment({ ...context.repo, comment_id: prev.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });

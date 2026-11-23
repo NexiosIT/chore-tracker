@@ -1,0 +1,104 @@
+name: Design System
+on:
+  pull_request:
+    paths:
+      - 'screens/**'
+      - 'design-system/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
+# Hub-wide design-system token binding. Every component-tree token
+# reference across all screens must resolve in (app ∪ _base). Warn by default;
+# set the repo/org variable DESIGN_SYSTEM_BLOCKING=true to fail the PR on
+# unresolved references (mirrors SPEC_DRIFT_BLOCKING).
+jobs:
+  token-binding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Design-system token check
+        id: dscheck
+        run: |
+          set +e
+          ie design-system check --json > dscheck.json
+          CODE=$?
+          set -e
+          cat dscheck.json
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+
+      # One comment per PR, updated in place, carrying the findings only; the
+      # full report stays in the job log. Built from `--json`, never by
+      # matching the CLI's human-readable text.
+      - name: Post results as PR comment
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          # Pass step outputs through env, NOT `${{ }}` interpolation into the
+          # script body: the check output carries repo-controlled strings (screen
+          # paths, component names, token values) and interpolating them into JS
+          # source is a script-injection vector. Env values and file contents
+          # are read as data.
+          DS_CODE: ${{ steps.dscheck.outputs.code }}
+          DS_BLOCKING: ${{ vars.DESIGN_SYSTEM_BLOCKING }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- ie:design-system-check -->';
+            const code = process.env.DS_CODE;
+            const status = code === '0'
+              ? '✅ All component-tree tokens resolve'
+              : '⚠️ Unresolved token references found';
+            const blocking = process.env.DS_BLOCKING === 'true';
+            const enforce = code !== '0'
+              ? (blocking
+                  ? '\n\n**Blocking** — `DESIGN_SYSTEM_BLOCKING=true`.'
+                  : '\n\nNon-blocking — set repo/org variable `DESIGN_SYSTEM_BLOCKING=true` to enforce.')
+              : '';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let result;
+            try { result = JSON.parse(fs.readFileSync('dscheck.json', 'utf8')); } catch {}
+            const lines = [];
+            if (!result) {
+              lines.push('✗ ie design-system check produced no readable result, see the run log');
+            } else if (!result.data) {
+              lines.push(`✗ ${result.error}`);
+            } else {
+              for (const f of result.data.findings) {
+                const where = f.component === '-' ? f.source : `${f.source} · ${f.component}.${f.slot}`;
+                const hint = f.suggestion ? ` (did you mean '${f.suggestion}'?)` : '';
+                lines.push(`✗ [${f.reason}] ${where}: '${f.token}'${hint} — ${f.detail}`);
+              }
+            }
+            for (const w of result?.warnings ?? []) lines.push(`⚠ ${w}`);
+            const MAX_LINES = 25, MAX_CHARS = 4000;
+            let shown = lines.slice(0, MAX_LINES).join('\n');
+            if (shown.length > MAX_CHARS) shown = shown.slice(0, MAX_CHARS) + ' …';
+            const more = lines.length > MAX_LINES ? `\n… ${lines.length - MAX_LINES} more line(s) in the run log` : '';
+            const detail = shown ? '\n\n```\n' + shown + more + '\n```' : '';
+            const body = `${marker}\n## Design System Check\n\n${status}${enforce}${detail}\n\n[Run log](${run})`;
+            const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
+            const prev = comments.find(c => c.body?.includes(marker));
+            if (prev) await github.rest.issues.updateComment({ ...context.repo, comment_id: prev.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+
+      - name: Enforce if configured
+        if: steps.dscheck.outputs.code != '0' && vars.DESIGN_SYSTEM_BLOCKING == 'true'
+        run: |
+          echo "::error::Design-system token check found unresolved references (DESIGN_SYSTEM_BLOCKING=true)"
+          exit 1

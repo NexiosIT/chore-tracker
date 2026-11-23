@@ -1,0 +1,385 @@
+# =============================================================================
+# Standards Index
+# =============================================================================
+# Master index of all standards in the product-hub.
+# Each entry maps a standard to its category, path, and applicability rules.
+# Used by `ie manifest assemble` to select standards for agent context.
+# Schema: @rp-flow/ie-core/schemas/standards-index.schema.json
+#
+# Phase 4 matching algorithm:
+#   1. Determine target service type AND framework from the service registry
+#   2. Filter standards where status = "active"
+#   3. Drop standards with injection = "workflow" — they are enforced by a
+#      workflow template (e.g. /ie/generate), not injected as context.
+#   4. Domain gate: drop standards whose applies_to.domains is non-empty and
+#      shares no domain with the generation's touched spec domains.
+#   5. For stack-coupled standards (path under standards/{framework}/ where the
+#      directory is not 'general' / 'api' / 'nfr'): include only when the
+#      touched service's `framework` field matches the directory name.
+#   6. For stack-agnostic standards (path under standards/general|api|nfr/):
+#      filter where applies_to.service_types is empty OR contains target type.
+#   7. Include matched standards in the agent context package as enriched
+#      entries ({id, name, category, path}) — see manifest.schema.json.
+#
+# Note: applies_to.domains scopes a standard to specific spec domains.
+# Empty ([]) = applies to all domains (the default — leave it as [] unless you
+# have a reason to narrow). A non-empty list selects the standard only for
+# generations that touch one of those domains. Domain names are the
+# specs/{domain}/ directory names; combined with service_types/framework via AND.
+#
+# Evolution:
+#   - discovery_layer tracks how the standard was introduced
+#   - last_reviewed tracks when a human last reviewed the standard
+#   - Layer 1 (CI) may add entries with status "draft" and discovery_layer "ci-detected"
+#   - Layer 2 (Guardian review) promotes or deprecates standards
+# =============================================================================
+
+standards:
+  - id: STD-001
+    name: API Response Envelope
+    category: api
+    path: standards/api/response-envelope.md
+    description: Standard response wrapper for all API endpoints — defines data, error, and meta envelope structure
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - backend
+        - gateway
+      domains: []
+  - id: STD-002
+    name: Error Handling Strategy
+    category: api
+    path: standards/api/error-handling.md
+    description: Error classification, propagation, and logging conventions for all backend services
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - backend
+        - gateway
+      domains: []
+  - id: STD-003
+    name: Naming Conventions
+    category: general
+    path: standards/general/naming-conventions.md
+    description: Naming rules for files, directories, variables, functions, classes, APIs, database objects, and events
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-04-06'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-004
+    name: Component Structure
+    category: nextjs
+    path: standards/nextjs/component-structure.md
+    description: Component organization, categorization, and composition rules for frontend services
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-04-06'
+    applies_to:
+      service_types:
+        - frontend
+      domains: []
+  - id: STD-005
+    name: Performance Budgets
+    category: nfr
+    path: standards/nfr/performance-budgets.md
+    description: Response time, load time, bundle size, rendering, and query performance budgets
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-04-06'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-006
+    name: Service Layer Pattern
+    category: spring-boot
+    path: standards/spring-boot/STD-006-service-layer.md
+    description: Transactional service methods with application-assigned identifiers, BigDecimal monetary precision, N+1-safe batch loading, and response building
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - backend
+      domains: []
+  - id: STD-007
+    name: Controller Endpoint Pattern
+    category: spring-boot
+    path: standards/spring-boot/STD-007-controller-endpoint.md
+    description: REST controller conventions — constructor injection, contract-mapped base paths, request validation, ApiEnvelope wrapping, contract-declared HTTP status codes
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - backend
+      domains: []
+  - id: STD-008
+    name: Entity & Repository Pattern
+    category: spring-boot
+    path: standards/spring-boot/STD-008-entity-repository.md
+    description: JPA entity design (application-assigned PKs — UUID default or contract-declared id type, audit fields), repository conventions (Specifications, batch loading), and Flyway migration patterns
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - backend
+      domains: []
+  - id: STD-009
+    name: Test Patterns
+    category: spring-boot
+    path: standards/spring-boot/STD-009-test-patterns.md
+    description: Unit test (Mockito) and integration test (SpringBootTest + MockMvc) conventions — naming, structure, assertions, response-envelope, contract-conformance and scenario-key-binding verification
+    status: active
+    version: 1.3.2
+    discovery_layer: manual
+    last_reviewed: '2026-08-31'
+    applies_to:
+      service_types:
+        - backend
+      domains: []
+  - id: STD-010
+    name: API Client & React Query Hooks
+    category: nextjs
+    path: standards/nextjs/STD-010-api-client-hooks.md
+    description: API client with snake_case conversion, mutation hooks with fieldErrors, query hooks with staleTime, search hooks with debounce
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-04-07'
+    applies_to:
+      service_types:
+        - frontend
+      domains: []
+  - id: STD-011
+    name: Form State & Validation Patterns
+    category: nextjs
+    path: standards/nextjs/STD-011-form-patterns.md
+    description: Form state management, FieldError validation, submission flow, FormField wrapper with accessibility
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - frontend
+      domains: []
+  - id: STD-012
+    name: Component Composition Patterns
+    category: nextjs
+    path: standards/nextjs/STD-012-component-patterns.md
+    description: Shared UI (forwardRef + typed variants), feature orchestrators, dialog/modal, combobox, toast, and config-driven components; styling mechanism is design-system-owned
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - frontend
+      domains: []
+  - id: STD-013
+    name: Page & Routing Structure
+    category: nextjs
+    path: standards/nextjs/STD-013-page-structure.md
+    description: Next.js App Router page conventions, file organization by domain, responsive table/dialog patterns
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-18'
+    applies_to:
+      service_types:
+        - frontend
+      domains: []
+  - id: STD-014
+    name: TDD Discipline
+    category: general
+    path: standards/general/STD-014-tdd-discipline.md
+    description: RED-GREEN-REFACTOR cycle enforcement for CP1-CP3; adapted test-first for CP4-CP5. Part of Agent Execution Discipline.
+    status: active
+    injection: workflow
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-06-01'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-015
+    name: Verification Protocol
+    category: general
+    path: standards/general/STD-015-verification-protocol.md
+    description: 5-step verification gate requiring fresh proof command evidence before any completion claim. Part of Agent Execution Discipline.
+    status: active
+    injection: workflow
+    version: 1.1.1
+    discovery_layer: manual
+    last_reviewed: '2026-10-07'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-016
+    name: Debugging Protocol
+    category: general
+    path: standards/general/STD-016-debugging-protocol.md
+    description: 4-phase systematic debugging replacing blind retry — root cause investigation, pattern analysis, hypothesis testing, implementation. Part of Agent Execution Discipline.
+    status: active
+    injection: workflow
+    version: 1.1.2
+    discovery_layer: manual
+    last_reviewed: '2026-10-08'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-017
+    name: No Magic Values
+    category: general
+    path: standards/general/STD-017-no-magic-values.md
+    description: All numeric and string literals with domain meaning must be named static constants or enums — no magic numbers, no hardcoded strings in logic
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-05-27'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-018
+    name: No Unused Dependencies
+    category: general
+    path: standards/general/STD-018-no-unused-dependencies.md
+    description: Every dependency must be actively used — no speculative additions, remove packages when consuming code is deleted
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-05-27'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-019
+    name: Zero Warnings
+    category: general
+    path: standards/general/STD-019-zero-warnings.md
+    description: Zero compiler, linter, and type-checker warnings — no suppressions, fix encountered warnings in touched files, verify clean output before completion
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-05-27'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-020
+    name: Service README
+    category: general
+    path: standards/general/STD-020-service-readme.md
+    description: Every service README must document startup instructions, required profiles, environment variables, prerequisites, and test commands
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-05-27'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-021
+    name: Event Publisher (Spring Kafka)
+    category: spring-boot
+    path: standards/spring-boot/STD-021-event-publisher.md
+    description: Publishing async events from a contract.asyncapi.yml send operation — broker-agnostic publisher port, Spring Kafka adapter, CloudEvents envelope, partition key, transactional outbox for at-least-once delivery
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-05-29'
+    applies_to:
+      service_types:
+        - backend
+      domains: []
+  - id: STD-022
+    name: Event Consumer (Spring Kafka)
+    category: spring-boot
+    path: standards/spring-boot/STD-022-event-consumer.md
+    description: Consuming async events for a contract.asyncapi.yml receive operation — @KafkaListener, idempotent handling, schema validation against the payload, retry + dead-letter topic, ordering by partition key
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-05-29'
+    applies_to:
+      service_types:
+        - backend
+      domains: []
+  - id: STD-023
+    name: Human-Readable Output
+    category: general
+    path: standards/general/STD-023-human-readable-output.md
+    description: 'Human-facing agent output (review findings, checkpoint summaries, status, error and log strings, contract and README prose) must be understandable cold — plain language, expand a coded term on first use, never invent ad-hoc code schemes, one locator line, and one reading per sentence (ASD-STE100 structural rules: active voice, one instruction per sentence, 20/25-word cap, no phrasal verbs, no semicolons, hedges kept). Output-readability discipline, enforced via injection: workflow like STD-014/015/016.'
+    status: active
+    injection: workflow
+    version: 1.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-09-02'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-024
+    name: Code-to-Contract Conformance
+    category: api
+    path: standards/api/STD-024-contract-conformance.md
+    description: Runtime code-to-contract conformance — integration tests validate the envelope-unwrapped request/response body against the UC contract schema (camelCase→snake_case + OpenAPI-nullable oracle projection), every operation covered; helper scans all UC snapshots and refuses a schema name two contracts define differently. Producer-side proof, distinct from Iron Dome spec↔spec
+    status: active
+    version: 1.2.0
+    discovery_layer: manual
+    last_reviewed: '2026-08-31'
+    applies_to:
+      service_types:
+        - backend
+        - gateway
+      domains: []
+  - id: STD-031
+    name: GraphQL Code-to-Contract Conformance
+    category: api
+    path: standards/api/STD-031-graphql-conformance.md
+    description: GraphQL conformance uses the native {data, errors} envelope, camelCase wire — STD-024's envelope unwrap + casing projection do NOT apply. Every Query/Mutation root field covered by an integration test; stable machine code at errors[].extensions.code; deliberate nullability; intentional partial-data semantics; no subscriptions at P1. Universal checklist — per-stack realization is customer-authored
+    status: active
+    version: 1.0.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-03'
+    applies_to:
+      service_types:
+        - backend
+        - gateway
+      domains: []
+  - id: STD-032
+    name: Comment Discipline
+    category: general
+    path: standards/general/STD-032-comment-discipline.md
+    description: Code must be self-explanatory — a comment only carries what code cannot express (domain constraint, non-obvious why, invariant). No spec/standard/process references, no narration, no ceremony doc-comments, no facts owned by other artifacts. Traceability lives in the Traceability Matrix and trace.yml, compliance in the checkpoint results — never in code
+    status: active
+    version: 1.1.0
+    discovery_layer: manual
+    injection: workflow
+    last_reviewed: '2026-07-26'
+    applies_to:
+      service_types: []
+      domains: []
+  - id: STD-035
+    name: Scenario-Key Test Binding
+    category: general
+    path: standards/general/STD-035-scenario-key-binding.md
+    description: Every scenario-verifying test carries the scenario's derived key ({UC-id}#{12-hex}, from `ie spec scenarios`) in its test name so JUnit XML results bind to spec scenarios deterministically — `ie scenarios coverage` joins results against live-derived keys, replacing keyword heuristics and agent self-attestation. Also pins the project-owned E2E runner contract (a single-app suite co-located with its app, a cross-app suite in the hub's journey repo; `test:e2e`, JUnit XML to e2e-results/, advisory in CI) and journey discipline (no mock at a boundary, drive the user's surface, public-surface assertions only, more than one engine, green at birth and never retried). Stale keys surface as re-point signals; advisory at P1
+    status: active
+    version: 1.2.0
+    discovery_layer: manual
+    last_reviewed: '2026-07-26'
+    applies_to:
+      service_types: []
+      domains: []

@@ -1,0 +1,151 @@
+name: Feature Approve
+# A merged spec PR is the approval act. When a PR into `main` merges,
+# promote every feature it touched that is currently `specified` to `approved`,
+# then dispatch `feature-approved` so manifest-assembly.yml can assemble at
+# touchpoint 2. This is the missing producer for the `approved` state.
+#
+# Trust boundary: auto-approval is only as safe as the merge gate.
+# `main` MUST require the spec PR checks (ie spec lint / readiness / integrity)
+# as branch protections so a merge implies a green, ready spec.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  packages: read
+  pull-requests: read
+
+jobs:
+  approve:
+    # Only merged PRs approve. A closed-without-merge PR is a no-op.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Promote merged specs to approved
+        id: promote
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Feature folders touched by this PR. Ask the API (depth-independent and
+          # robust to merge-commit shape) rather than diffing locally.
+          #
+          # The grep matches a feature folder AND the two kinds that live one level
+          # deeper: a post-delivery fix and a technical improvement. It is pinned to
+          # the id shape rather than
+          # a bare `[^/]+` per level, so their own subdirectories (specification/,
+          # shaping/) can never be mistaken for the folder itself. Without the
+          # deeper alternatives neither ever reaches `approved`, and handover then
+          # refuses them naming the wrong cause. A subdirectory added here for a
+          # fourth artifact kind must be added to this alternation in the same
+          # change, or that kind's spec PR silently approves nothing.
+          #
+          # The id's PREFIX is hub-configurable, so the shape is matched
+          # generically rather than as `FT|FIX`: under a renamed prefix the pinned
+          # literal matched nothing, this step printed "nothing to approve" and
+          # exited 0, so no feature ever reached `approved`: the dead chain this
+          # workflow exists to close was silently restored, on green CI. Widened
+          # rather than rendered (contrast quality-gates' branch guard) because
+          # nothing here exits 1
+          # on a false positive: a folder that merely looks like an id is dropped by
+          # the manifest check below, and by the `specified` pre-filter after it.
+          # The `^features/active/` anchor is what keeps the other id series out —
+          # use cases live under `specs/`, screens under `screens/`, standards under
+          # `standards/` — so widening the prefix cannot reach them.
+          #
+          # These comments sit ABOVE the pipeline deliberately: a comment between a
+          # line-continuation and the next `|` segment terminates the command, and
+          # the following bare pipe is a syntax error that kills the whole step —
+          # silently reinstating the dead approval producer this workflow exists to
+          # be.
+          DIRS=$(gh pr view "$PR" --repo "$REPO" --json files -q '.files[].path' \
+            | grep -oE '^features/active/(post-delivery-defect/|technical-improvement/)?[A-Za-z][A-Za-z0-9-]*-[0-9]+-[^/]+/' \
+            | sort -u || true)
+
+          if [ -z "$DIRS" ]; then
+            echo "No feature folders touched by this PR — nothing to approve."
+            echo "promoted=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PROMOTED=""
+          for DIR in $DIRS; do
+            MANIFEST="${DIR}manifest.yml"
+            if [ ! -f "$MANIFEST" ]; then
+              echo "Skip $DIR — no manifest.yml"
+              continue
+            fi
+            STATUS=$(grep '^status:' "$MANIFEST" | head -1 | awk '{print $2}' | tr -d '"')
+            FEATURE_ID=$(grep '^id:' "$MANIFEST" | head -1 | awk '{print $2}' | tr -d '"')
+            # Pre-filter to `specified`: never hand the CLI a non-sequential jump.
+            # A feature still in `shaping` (or already past `specified`) is skipped.
+            if [ "$STATUS" = "specified" ]; then
+              echo "Approving $FEATURE_ID (was specified)"
+              ie feature status "$FEATURE_ID" approved --json
+              PROMOTED="${PROMOTED} ${FEATURE_ID}"
+            else
+              echo "Skip $FEATURE_ID — status is '$STATUS', not 'specified'"
+            fi
+          done
+
+          PROMOTED=$(echo "$PROMOTED" | xargs || true)
+          echo "promoted=${PROMOTED}" >> "$GITHUB_OUTPUT"
+          echo "Promoted: ${PROMOTED:-(none)}"
+
+      - name: Commit status changes
+        if: steps.promote.outputs.promoted != ''
+        # promoted is derived from PR-controlled manifest content — env: only,
+        # never raw ${{ }} in the script (script-injection hardening).
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          git config user.name "ie-cli[bot]"
+          git config user.email "ie-cli@users.noreply.github.com"
+          git add features/
+          git diff --staged --quiet || git commit -m "chore: approve ${PROMOTED} (spec PR #${PR} merged)"
+          git push
+
+      - name: Dispatch feature-approved events
+        if: steps.promote.outputs.promoted != ''
+        # NOTE: a repository_dispatch created with the default GITHUB_TOKEN does not
+        # cascade to trigger manifest-assembly.yml (GitHub's recursion guard). To make
+        # the assembly hop fire automatically, set this to a PAT with `repo` scope —
+        # the same PRODUCT_HUB_TOKEN model the code-repo workflow uses to read the hub.
+        # Without it the status reaches `approved` correctly; assembly is then a
+        # manual `ie manifest assemble <id>` (or a manual workflow re-dispatch).
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+        run: |
+          set -euo pipefail
+          for FEATURE_ID in $PROMOTED; do
+            echo "Dispatching feature-approved for $FEATURE_ID"
+            gh api "repos/${REPO}/dispatches" \
+              -f event_type=feature-approved \
+              -f "client_payload[feature_id]=${FEATURE_ID}"
+          done

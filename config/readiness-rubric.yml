@@ -1,0 +1,345 @@
+# =============================================================================
+# Readiness Scoring Rubric
+# =============================================================================
+# 100-point rubric for determining if a UC spec is ready for Phase 4.
+# Evaluated by `ie spec readiness -u UC-{id}`.
+#
+# Thresholds (from config.yml):
+#   >= 80: ready      — Spec can proceed to Phase 4
+#   60-79: needs_work — Spec has gaps that should be addressed
+#   < 60:  blocked    — Spec is not ready for generation
+#
+# Ported from ShapeKit's readiness scoring.
+# Each check has a point weight and severity.
+# Conditional checks redistribute points when not applicable.
+# =============================================================================
+
+version: "1.0.0"
+
+thresholds:
+  ready: 80
+  needs_work: 60
+
+checks:
+
+  # ---------------------------------------------------------------------------
+  # scenarios.feature — 35 points (6 checks)
+  # ---------------------------------------------------------------------------
+  # Gherkin scenarios are the behavioral truth of the spec. A spec without a
+  # solid happy path and error coverage is not ready for generation.
+
+  - id: "SCN-01"
+    target: "scenarios.feature"
+    name: "Happy path scenario exists"
+    description: "At least one scenario tagged @happy-path (or clearly representing the success flow) must be present. This is the minimum viable behavior definition."
+    points: 10
+    severity: "blocking"
+    rule: "happy_path_exists"
+
+  - id: "SCN-02"
+    target: "scenarios.feature"
+    name: "Error scenarios present"
+    description: "At least the configured minimum number of error/failure scenarios must be present. Error handling is a first-class concern — agents cannot generate robust code without explicit error paths."
+    points: 8
+    severity: "blocking"
+    rule: "error_scenarios_minimum"
+    params:
+      minimum: 2
+
+  - id: "SCN-03"
+    target: "scenarios.feature"
+    name: "Edge case scenarios present"
+    description: "At least the configured minimum number of edge case scenarios (boundary conditions, unusual inputs, concurrency) must be present."
+    points: 5
+    severity: "warning"
+    rule: "edge_case_scenarios_minimum"
+    params:
+      minimum: 1
+
+  - id: "SCN-04"
+    target: "scenarios.feature"
+    name: "Scenarios use concrete examples"
+    description: "Scenario steps should use concrete example values rather than abstract placeholders. Concrete examples eliminate ambiguity and enable direct test generation."
+    points: 5
+    severity: "warning"
+    rule: "scenarios_use_concrete_examples"
+
+  - id: "SCN-05"
+    target: "scenarios.feature"
+    name: "Feature description complete"
+    description: "The Feature block must include a full user story description following the 'As a / I want / So that' format. This anchors every scenario to a clear user intent."
+    points: 3
+    severity: "warning"
+    rule: "feature_description_complete"
+
+  - id: "SCN-06"
+    target: "scenarios.feature"
+    name: "No duplicate scenarios"
+    description: "No two scenarios should have identical Given/When step combinations. Duplicates indicate copy-paste errors or unresolved ambiguity."
+    points: 4
+    severity: "blocking"
+    rule: "no_duplicate_scenarios"
+
+  # ---------------------------------------------------------------------------
+  # contract.openapi.yml — 25 points (4 checks, conditional)
+  # ---------------------------------------------------------------------------
+  # The OpenAPI contract defines the synchronous technical interface. Opaque or
+  # missing schemas force agents to guess. These checks are conditional:
+  # an event-only UC has no OpenAPI contract, so their points redistribute to the
+  # async and remaining checks.
+
+  - id: "CTR-01"
+    target: "contract.openapi.yml"
+    name: "Request schema defined and concrete"
+    description: "The request body (or query parameters for GET) must have a fully specified schema with explicit properties and types. No opaque 'type: object' without properties."
+    points: 8
+    severity: "blocking"
+    rule: "request_schema_concrete"
+    conditional: true
+
+  - id: "CTR-02"
+    target: "contract.openapi.yml"
+    name: "Response schema defined and concrete"
+    description: "The success response (2xx) must have a fully specified schema with explicit properties and types. No opaque 'type: object' without properties."
+    points: 8
+    severity: "blocking"
+    rule: "response_schema_concrete"
+    conditional: true
+
+  - id: "CTR-03"
+    target: "contract.openapi.yml"
+    name: "Error responses defined"
+    description: "At least one error response (4xx or 5xx) must be defined with a schema. Error contracts are required for agents to generate proper error handling."
+    points: 5
+    severity: "blocking"
+    rule: "error_responses_defined"
+    conditional: true
+
+  - id: "CTR-04"
+    target: "contract.openapi.yml"
+    name: "Field examples present"
+    description: "Schema properties should include 'example' values. Examples serve as documentation and enable agents to generate realistic test fixtures."
+    points: 4
+    severity: "warning"
+    rule: "field_examples_present"
+    conditional: true
+
+  # ---------------------------------------------------------------------------
+  # contract.asyncapi.yml — 25 points (3 checks, conditional)
+  # ---------------------------------------------------------------------------
+  # The async event contract defines what a UC publishes/consumes. Conditional:
+  # applies only when contract.asyncapi.yml is present. For a sync-only UC these
+  # points redistribute; for an event-only UC the OpenAPI (CTR-*) points
+  # redistribute here. A hybrid UC exercises both buckets (normalized to 100).
+
+  - id: "ASY-01"
+    target: "contract.asyncapi.yml"
+    name: "Event payload schema defined and concrete"
+    description: "Every event message must have a fully specified payload schema with explicit properties and types. No opaque 'type: object' without properties."
+    points: 10
+    severity: "blocking"
+    rule: "async_payload_concrete"
+    conditional: true
+
+  - id: "ASY-02"
+    target: "contract.asyncapi.yml"
+    name: "Channel address and operation direction present"
+    description: "At least one channel must declare a broker-agnostic address and at least one operation must declare a send (produce) or receive (consume) action. This is what Iron Dome matches on for producer↔consumer drift."
+    points: 10
+    severity: "blocking"
+    rule: "async_channel_operation_present"
+    conditional: true
+
+  - id: "ASY-03"
+    target: "contract.asyncapi.yml"
+    name: "Event field examples present"
+    description: "Event payload properties should include 'example' values, so agents can generate realistic fixtures and consumers understand the wire shape."
+    points: 5
+    severity: "warning"
+    rule: "async_field_examples_present"
+    conditional: true
+
+  # ---------------------------------------------------------------------------
+  # contract.proto — 25 points (3 checks, conditional)
+  # ---------------------------------------------------------------------------
+  # The gRPC contract defines a synchronous RPC interface. Empty request/response
+  # messages force agents to guess the payload shape. Conditional: applies only
+  # when contract.proto is present; otherwise the weight redistributes like CTR-*.
+
+  - id: "GRP-01"
+    target: "contract.proto"
+    name: "Request message defined and concrete"
+    description: "At least one RPC's request message must resolve to a locally-defined message with explicit fields. An all-empty request surface means the agent has no typed input to generate against."
+    points: 10
+    severity: "blocking"
+    rule: "grpc_request_concrete"
+    conditional: true
+
+  - id: "GRP-02"
+    target: "contract.proto"
+    name: "Response message defined and concrete"
+    description: "At least one RPC's response message must resolve to a locally-defined message with explicit fields. An all-empty response surface hides the return contract from the agent."
+    points: 10
+    severity: "blocking"
+    rule: "grpc_response_concrete"
+    conditional: true
+
+  - id: "GRP-03"
+    target: "contract.proto"
+    name: "Field documentation present"
+    description: "Message fields should carry leading doc comments (proto's documentation analog to OpenAPI field examples), so the intent of each field is unambiguous to the agent."
+    points: 5
+    severity: "warning"
+    rule: "grpc_field_docs_present"
+    conditional: true
+
+  # ---------------------------------------------------------------------------
+  # contract.graphql — 25 points (3 checks, conditional)
+  # ---------------------------------------------------------------------------
+  # The GraphQL SDL fragment defines this UC's operations and output shapes. A
+  # UC contract is a fragment (mutation-only is legal), so the floor is "≥1 root
+  # field". Conditional: applies only when contract.graphql is present; otherwise
+  # the weight redistributes like CTR-*.
+
+  - id: "GQL-01"
+    target: "contract.graphql"
+    name: "Operation defined"
+    description: "The SDL must define at least one Query or Mutation root field. This is the operation the UC exposes — without it there is nothing to generate."
+    points: 10
+    severity: "blocking"
+    rule: "graphql_operations_defined"
+    conditional: true
+
+  - id: "GQL-02"
+    target: "contract.graphql"
+    name: "Output type concrete"
+    description: "At least one object type (excluding roots and Relay wrappers) must declare explicit fields. A contract that returns only scalars or opaque types gives the agent no structured shape to build."
+    points: 10
+    severity: "blocking"
+    rule: "graphql_output_concrete"
+    conditional: true
+
+  - id: "GQL-03"
+    target: "contract.graphql"
+    name: "Field descriptions present"
+    description: "Object-type fields should carry SDL descriptions (GraphQL's documentation analog to OpenAPI field examples), so the meaning of each field is explicit."
+    points: 5
+    severity: "warning"
+    rule: "graphql_field_docs_present"
+    conditional: true
+
+  # ---------------------------------------------------------------------------
+  # flow.mermaid — 10 points (2 checks, conditional)
+  # ---------------------------------------------------------------------------
+  # Flow diagrams are required for multi-step or stateful use cases. When the
+  # UC is a simple CRUD operation, these checks are conditional and their
+  # points redistribute proportionally across non-conditional checks.
+
+  - id: "FLW-01"
+    target: "flow.mermaid"
+    name: "Flow diagram present"
+    description: "A Mermaid flow diagram (stateDiagram, sequenceDiagram, or flowchart) must be present when the use case involves multiple steps, state transitions, or cross-service interactions."
+    points: 5
+    severity: "warning"
+    rule: "flow_diagram_present"
+    conditional: true
+
+  - id: "FLW-02"
+    target: "flow.mermaid"
+    name: "Error paths in flow"
+    description: "The flow diagram must include at least one error/failure path. Happy-path-only diagrams hide critical system behavior from agents."
+    points: 5
+    severity: "warning"
+    rule: "flow_error_paths_present"
+    conditional: true
+
+  # ---------------------------------------------------------------------------
+  # meta.yml — 15 points (4 checks)
+  # ---------------------------------------------------------------------------
+  # Metadata anchors the spec to its domain context. Without a clear goal,
+  # preconditions, and entity references, agents lack the context needed to
+  # generate correctly scoped code.
+
+  - id: "MTA-01"
+    target: "meta.yml"
+    name: "Goal statement present and formatted"
+    description: "The meta.yml must contain a non-empty 'goal' field describing what the use case achieves in a single clear sentence."
+    points: 5
+    severity: "blocking"
+    rule: "goal_statement_present"
+
+  - id: "MTA-02"
+    target: "meta.yml"
+    name: "Preconditions defined"
+    description: "The meta.yml must list at least one precondition — what must be true before this use case can execute. This scopes agent assumptions."
+    points: 3
+    severity: "warning"
+    rule: "preconditions_defined"
+
+  - id: "MTA-03"
+    target: "meta.yml"
+    name: "Postconditions defined"
+    description: "The meta.yml must list at least one postcondition — what is guaranteed to be true after successful execution. This defines the verification contract."
+    points: 3
+    severity: "warning"
+    rule: "postconditions_defined"
+
+  - id: "MTA-04"
+    target: "meta.yml"
+    name: "Entities listed"
+    description: "The meta.yml must reference at least one domain entity. Entity references connect the spec to the data model and enable cross-spec traceability."
+    points: 4
+    severity: "warning"
+    rule: "entities_listed"
+
+  # ---------------------------------------------------------------------------
+  # cross-file — 10 points (2 checks)
+  # ---------------------------------------------------------------------------
+  # Cross-file checks verify consistency between spec files. These are checks
+  # that ShapeKit could not perform (single-file format) and are unique to the
+  # multi-file spec architecture.
+
+  - id: "XRF-01"
+    target: "cross-file"
+    name: "Scenario-contract field alignment"
+    description: "Every data field referenced in Gherkin scenario steps must have a corresponding property in the OpenAPI contract schemas. Misalignment means the agent will generate code that either ignores scenario data or invents contract fields."
+    points: 6
+    severity: "blocking"
+    rule: "scenario_contract_field_alignment"
+    conditional: true
+
+  - id: "XRF-02"
+    target: "cross-file"
+    name: "Error scenario-response alignment"
+    description: "Each error scenario in scenarios.feature should have a matching HTTP error status code defined in the contract's error responses. Unmatched error scenarios produce ambiguous error handling."
+    points: 4
+    severity: "warning"
+    rule: "error_scenario_response_alignment"
+    conditional: true
+
+  - id: "XRF-03"
+    target: "cross-file"
+    name: "Postconditions covered in Then steps"
+    description: "Each meta.yml postcondition should share enough content words with a Then step of the happy-path scenario to plausibly be verified by it (shaping gate G2-07). A token-overlap coverage nudge in the FLW-02 tradition — not a truth check, which is why it warns rather than blocks."
+    points: 3
+    severity: "warning"
+    rule: "postconditions_then_coverage"
+
+# =============================================================================
+# Point Summary (raw weights; the scorer normalizes applicable checks to 100):
+#   scenarios.feature:     35 (SCN-01 through SCN-06)
+#   contract.openapi.yml:  25 (CTR-01 through CTR-04) — conditional
+#   contract.asyncapi.yml: 25 (ASY-01 through ASY-03) — conditional
+#   contract.proto:        25 (GRP-01 through GRP-03) — conditional
+#   contract.graphql:      25 (GQL-01 through GQL-03) — conditional
+#   flow.mermaid:          10 (FLW-01, FLW-02) — conditional
+#   meta.yml:              15 (MTA-01 through MTA-04)
+#   cross-file:            10 (XRF-01, XRF-02)
+#
+# Conditional checks (every contract type + flow.mermaid): when not applicable
+# (the file is absent), their points are redistributed proportionally across the
+# applicable checks so the score is always normalized to 100. A UC must carry at
+# least one contract type and scores only on the buckets it carries — a sync REST
+# UC on CTR-*, an event-only UC on ASY-*, a gRPC UC on GRP-*, a GraphQL UC on
+# GQL-*, and a hybrid UC on each bucket whose contract file it includes.
+# =============================================================================

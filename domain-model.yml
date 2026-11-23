@@ -1,0 +1,16 @@
+# =============================================================================
+# Domain Model Registry
+# =============================================================================
+# Hub-canonical, context-scoped entity registry. Spec `entities[]` values bind
+# to it by name. Contexts == your specs/{domain}/ folders. The owning service
+# is derived live from services/*.yml `domains[]` — never stored here.
+#
+# Populate it from what the hub already wrote:   ie domain init
+# Then curate and flip `status: curated` (in a reviewed PR) to turn resolution
+# warnings into blocks and activate UC-granularity enforcement.
+# Schema: @rp-flow/ie-core/schemas/domain-model.schema.json
+# =============================================================================
+
+version: 1
+status: draft
+contexts: {}

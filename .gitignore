@@ -1,0 +1,3 @@
+# Per-machine workspace map. Each engineer generates
+# their own with `ie workspace bootstrap` — never commit this.
+.ie/workspace.yml

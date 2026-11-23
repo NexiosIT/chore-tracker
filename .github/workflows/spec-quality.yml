@@ -1,0 +1,125 @@
+name: Spec Quality
+on:
+  pull_request:
+    paths:
+      - 'specs/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
+jobs:
+  lint-and-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Detect changed spec folders
+        id: changed
+        run: |
+          CHANGED=$(git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | grep '^specs/' | sed 's|/[^/]*$||' | sort -u)
+          echo "folders<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # Changed-folder lists are PR-controlled path names — env: only, never
+      # raw ${{ }} in run: scripts (script-injection hardening).
+      - name: Run lint checks
+        id: lint
+        env:
+          FOLDERS: ${{ steps.changed.outputs.folders }}
+        run: |
+          LINT_FAILED=0
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            echo "=== Linting: $folder ==="
+            ie spec lint --path "$folder" --json || LINT_FAILED=1
+          done <<< "$FOLDERS"
+          echo "failed=$LINT_FAILED" >> $GITHUB_OUTPUT
+          if [ "$LINT_FAILED" = "1" ]; then
+            echo "::error::Spec lint checks failed"
+            exit 1
+          fi
+
+      - name: Run readiness scoring
+        id: readiness
+        env:
+          FOLDERS: ${{ steps.changed.outputs.folders }}
+        run: |
+          mkdir -p readiness
+          n=0
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            n=$((n + 1))
+            echo "=== Readiness: $folder ==="
+            printf '%s' "$folder" > "readiness/$n.path"
+            ie spec readiness --path "$folder" --json > "readiness/$n.json" || true
+            cat "readiness/$n.json"
+          done <<< "$FOLDERS"
+
+      # One comment per PR, updated in place: one score line per spec. The
+      # per-check breakdown stays in the job log.
+      - name: Post results as PR comment
+        if: always()
+        uses: actions/github-script@v8
+        # The comment is built from `--json`, never by matching the CLI's
+        # human-readable text, so rewording that text cannot empty it.
+        # Outputs reach the script as env vars and files, never via ${{ }}
+        # inside the JS source — spec-derived text could otherwise escape the
+        # template literal and run JS with this job's token.
+        env:
+          LINT_FAILED: ${{ steps.lint.outputs.failed }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- ie:spec-quality -->';
+            const lint = process.env.LINT_FAILED;
+            const lintStatus = lint === '1' ? '⚠️ Some lint checks failed' : '✅ All lint checks passed';
+            const scoreLine = (path, s) => `${path}: structural score ${s.score}/100 (${s.grade})` +
+              (s.grade_capped ? `, capped below ready by failed blocking check(s): ${s.blocking_failures.join(', ')}` : '');
+            const scores = [];
+            let scopeNote = '';
+            let runs = [];
+            try { runs = fs.readdirSync('readiness').filter(f => f.endsWith('.json')).sort((a, b) => parseInt(a) - parseInt(b)); } catch {}
+            for (const f of runs) {
+              const folder = fs.readFileSync(`readiness/${f.replace(/\.json$/, '.path')}`, 'utf8');
+              let result;
+              try { result = JSON.parse(fs.readFileSync(`readiness/${f}`, 'utf8')); } catch {}
+              if (!result?.success) {
+                scores.push(`${folder}: could not be scored${result?.error ? ` (${result.error})` : ''}, see the run log`);
+                continue;
+              }
+              scopeNote ||= result.data.scope_note ?? '';
+              if (result.data.specs) {
+                for (const s of result.data.specs) scores.push(scoreLine(s.path, s));
+              } else {
+                scores.push(scoreLine(folder, result.data));
+              }
+            }
+            const MAX_LINES = 30;
+            const more = scores.length > MAX_LINES ? `\n… ${scores.length - MAX_LINES} more in the run log` : '';
+            const readinessSection = scores.length
+              ? '\n\n### Readiness\n\n' + (scopeNote ? `Single-spec structural score: ${scopeNote}.\n\n` : '') +
+                '```\n' + scores.slice(0, MAX_LINES).join('\n') + more + '\n```'
+              : '';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `${marker}\n## Spec Quality Check\n\n${lintStatus}${readinessSection}\n\n[Run log](${run})`;
+            const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
+            const prev = comments.find(c => c.body?.includes(marker));
+            if (prev) await github.rest.issues.updateComment({ ...context.repo, comment_id: prev.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });

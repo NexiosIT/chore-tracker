@@ -1,0 +1,74 @@
+name: Auto Archive
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Find and archive stale delivered features
+        run: |
+          # Read threshold from config.yml (default: 14 days)
+          THRESHOLD_DAYS=$(grep 'auto_archive_after_days' config.yml 2>/dev/null | awk '{print $2}' || echo 14)
+          [ -z "$THRESHOLD_DAYS" ] && THRESHOLD_DAYS=14
+          echo "Archive threshold: $THRESHOLD_DAYS days"
+
+          ARCHIVED=0
+          # Two globs, not one: a post-delivery fix lives one level deeper, at
+          # features/active/post-delivery-defect/FIX-NNN-<slug>/,
+          # and a glob that misses it fails SILENTLY — the loop simply never sees
+          # the fix. The `[ -f ]` guard below already absorbs a glob that matches
+          # nothing, so the deeper pattern is safe on a hub with no fixes.
+          for manifest in features/active/*/manifest.yml features/active/*/*/manifest.yml; do
+            [ -f "$manifest" ] || continue
+            STATUS=$(grep '^status:' "$manifest" | awk '{print $2}' | tr -d '"')
+            if [ "$STATUS" = "delivered" ]; then
+              FEATURE_ID=$(grep '^id:' "$manifest" | head -1 | awk '{print $2}' | tr -d '"')
+              # Check git log for when status was last changed
+              LAST_MODIFIED=$(git log -1 --format=%ct -- "$manifest" 2>/dev/null || echo 0)
+              NOW=$(date +%s)
+              DAYS_AGO=$(( (NOW - LAST_MODIFIED) / 86400 ))
+              if [ "$DAYS_AGO" -ge "$THRESHOLD_DAYS" ]; then
+                echo "Archiving $FEATURE_ID (delivered $DAYS_AGO days ago)"
+                ie feature archive "$FEATURE_ID"
+                ARCHIVED=$((ARCHIVED + 1))
+              fi
+            fi
+          done
+          echo "Archived $ARCHIVED features"
+
+      - name: Commit archives
+        run: |
+          git config user.name "ie-cli[bot]"
+          git config user.email "ie-cli@users.noreply.github.com"
+          # `ie feature archive` moves TWO things: the feature folder and
+          # bug-reports/<service>/FT-x/ → bug-reports/<service>/archive/FT-x/.
+          # Staging only features/ committed the first and silently dropped the
+          # second, leaving an archived feature whose bug reports are still filed
+          # under the active path.
+          git add -A features/
+          if [ -d bug-reports ]; then git add -A bug-reports/; fi
+          git diff --staged --quiet || git commit -m "chore: auto-archive delivered features"
+          git push

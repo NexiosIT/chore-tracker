@@ -1,0 +1,23 @@
+# =============================================================================
+# Integrations Registry
+# =============================================================================
+# Hub-canonical external-service registry. Pins the realization FACTS of each
+# external service (provider, client library, behaviour standard, env-var
+# names, private-docs pointer). A UC references an entry by id via meta.yml
+# `integrations: [<id>]`. Standards own patterns; the registry owns facts.
+#
+# Add an entry per external service, e.g.:
+#   integrations:
+#     keycloak:
+#       kind: infrastructure        # saas | partner-api | infrastructure
+#       impl: { kind: dependency, package: "..." }
+#       contract: STD-033           # the behaviour standard (optional)
+#       env: [KEYCLOAK_ISSUER_URI]  # env-var NAMES only, never values
+#
+# Validate: ie integrations check   ·   List: ie integrations list
+# Schema: @rp-flow/ie-core/schemas/integrations.schema.json
+# =============================================================================
+
+version: 1
+status: draft
+integrations: {}

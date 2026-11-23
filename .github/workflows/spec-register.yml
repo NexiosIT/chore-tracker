@@ -1,0 +1,63 @@
+name: Spec Register
+on:
+  pull_request:
+    paths:
+      - 'specs/**'
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rp-flow'
+          package-manager-cache: false   # only npm-installs ie-cli; no deps to cache (v5 auto-cache breaks on pnpm hubs)
+
+      - name: Install ie CLI
+        run: npm install -g @rp-flow/ie-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.IE_CLI_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Detect changed spec folders
+        id: changed
+        run: |
+          CHANGED=$(git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | grep '^specs/' | sed 's|/[^/]*$||' | sort -u)
+          echo "folders<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # Changed-folder lists are PR-controlled path names — env: only, never
+      # raw ${{ }} in run: scripts (script-injection hardening).
+      - name: Register specs
+        env:
+          FOLDERS: ${{ steps.changed.outputs.folders }}
+        run: |
+          FAILED=0
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            echo "Registering: $folder"
+            ie spec register --path "$folder" --json || FAILED=1
+          done <<< "$FOLDERS"
+          if [ "$FAILED" = "1" ]; then
+            echo "::warning::Some spec registrations failed — check logs above"
+          fi
+
+      - name: Commit updated hashes
+        run: |
+          git config user.name "ie-cli[bot]"
+          git config user.email "ie-cli@users.noreply.github.com"
+          git add catalog.yml specs/**/meta.yml
+          git diff --staged --quiet || git commit -m "chore: seal spec hashes via ie spec register"
+          git push

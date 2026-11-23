@@ -1,0 +1,233 @@
+# =============================================================================
+# Shaping Gates — Validation Checkpoints
+# =============================================================================
+# Structured validation gates that run between sub-phases of spec authoring.
+# Each gate produces a brief report: pass/warn/fail per check. Blocking
+# checks must be resolved before proceeding; warnings are informational.
+#
+# Gate sequence:
+#   Gate 1 (after meta.yml)             — Context & Preconditions
+#   Gate 2 (after scenarios.feature)    — Scenario Completeness
+#   Gate 3 (after contract.openapi.yml) — Contract Concreteness
+#   Gate 4 (after full assembly)        — Readiness Check
+#
+# Severity:
+#   blocking — Must be resolved before proceeding to next sub-phase
+#   warning  — Informational; should be addressed but does not block
+#
+# curated_gated:
+#   Checks flagged `curated_gated: true` are UC-granularity checks that activate
+#   only once the hub adopts a domain registry (`domain-model.yml`). They follow
+#   the warn-then-block ramp keyed on the registry's `status` (learn it
+#   via `ie domain check --json` → .data.status):
+#     - no registry / status: draft → advisory (treat as warning; never block)
+#     - status: curated            → the declared `severity` applies (a `blocking`
+#                                     check now blocks; a `warning` check — a
+#                                     detector or tripwire — stays advisory)
+#   `ie spec lint` is the canonical enforcer of the deterministic ones (G1-07,
+#   G1-08, G2-09, G3-08); these definitions are the author-time mirror.
+#
+# Schema: @rp-flow/ie-core/schemas/shaping-gates.schema.json (future — Layer 2)
+# =============================================================================
+
+version: "1.0.0"
+
+gates:
+
+  # ---------------------------------------------------------------------------
+  # GATE 1 — Context & Preconditions
+  # Runs after: meta.yml authoring (Step 1)
+  # Purpose: Ensure the UC is properly scoped with architecture context
+  # ---------------------------------------------------------------------------
+  - id: "GATE-1"
+    name: "Context & Preconditions"
+    description: "Validates that the use case is properly scoped, the right entities are identified, and architecture context is present."
+    runs_after: "meta.yml authoring"
+    checks:
+      - id: "G1-01"
+        name: "Goal statement present"
+        rule: "meta.yml goal field is non-empty and follows 'As a {actor}, I want to {goal} so that {benefit}' format"
+        severity: "blocking"
+
+      - id: "G1-02"
+        name: "Actor identified"
+        rule: "meta.yml actor field is non-empty"
+        severity: "blocking"
+
+      - id: "G1-03"
+        name: "Domain assigned"
+        rule: "meta.yml domain field is non-empty and matches an existing specs/{domain}/ directory"
+        severity: "blocking"
+
+      - id: "G1-04"
+        name: "Service ownership resolved"
+        rule: "meta.yml service field is non-empty and matches an entry in services/*.yml"
+        severity: "blocking"
+
+      - id: "G1-05"
+        name: "Entities identified"
+        rule: "meta.yml entities list has at least one entry"
+        severity: "warning"
+
+      - id: "G1-06"
+        name: "Preconditions listed"
+        rule: "meta.yml preconditions list has at least one entry"
+        severity: "warning"
+
+      - id: "G1-07"
+        name: "Endpoint defined and singular"
+        rule: "For any UC exposing a REST operation, meta.yml endpoint is non-empty and a SINGLE '{METHOD} /path' (e.g. 'POST /api/v1/orders'). One actor-goal, one primary operation. Event-only UCs (AsyncAPI only) have no endpoint and are exempt. Enforced by `ie spec lint`."
+        severity: "blocking"
+        curated_gated: true
+
+      - id: "G1-08"
+        name: "Task-based UC naming"
+        rule: "meta.yml slug uses a task verb (register-customer, deactivate-account, reschedule-entry), not a CRUD verb. A slug beginning create-/update-/delete-/get-/manage-/list-/fetch-/retrieve- is flagged — proceed by either task-naming it or, for a pure-CRUD entity, adopting the manage-{entity} carve-out and recording the rationale in the feature's Key Decisions table. Enforced as a warning by `ie spec lint`."
+        severity: "warning"
+        curated_gated: true
+
+    output: "Gate 1 report with pass/fail per check, blocking issues highlighted"
+
+
+  # ---------------------------------------------------------------------------
+  # GATE 2 — Scenario Completeness
+  # Runs after: scenarios.feature authoring (Step 2)
+  # Purpose: Ensure behavioral coverage is sufficient for generation
+  # ---------------------------------------------------------------------------
+  - id: "GATE-2"
+    name: "Scenario Completeness"
+    description: "Validates that scenarios cover the happy path, error cases, and edge cases. Checks for contradictions with existing specs."
+    runs_after: "scenarios.feature authoring"
+    checks:
+      - id: "G2-01"
+        name: "Happy path exists"
+        rule: "At least one scenario without 'error', 'fail', 'invalid', 'denied', or 'unauthorized' in its name"
+        severity: "blocking"
+
+      - id: "G2-02"
+        name: "Error scenarios >= 2"
+        rule: "At least two scenarios covering error conditions (validation failure, not found, unauthorized, etc.)"
+        severity: "blocking"
+
+      - id: "G2-03"
+        name: "Edge case present"
+        rule: "At least one scenario covering a boundary condition or unusual input"
+        severity: "warning"
+
+      - id: "G2-04"
+        name: "Concrete examples used"
+        rule: "Scenario steps use concrete values (actual names, numbers, dates) not placeholders like 'some value'"
+        severity: "warning"
+
+      - id: "G2-05"
+        name: "Feature description complete"
+        rule: "Feature block has a non-empty description following the Feature: line"
+        severity: "warning"
+
+      - id: "G2-06"
+        name: "No contradictions with existing specs"
+        rule: "Scenario Given/When pairs do not conflict with scenarios in related specs (same preconditions leading to incompatible outcomes)"
+        severity: "blocking"
+
+      - id: "G2-07"
+        name: "Postconditions covered in Then steps"
+        rule: "Each postcondition from meta.yml has at least one Then step that verifies it in the happy path scenario"
+        severity: "warning"
+        config_ref: "config/readiness-rubric.yml"
+
+      - id: "G2-09"
+        name: "Scenario budget (MIN-01)"
+        rule: "A UC has at most 12 scenarios (counting Scenario and Scenario Outline headers). More than 12 is a tripwire: the UC is likely mis-sized or hiding a decision table — split it, or move combinatorial cases into a decisions.md table (MIN-01). Enforced as a warning by `ie spec lint`."
+        severity: "warning"
+        curated_gated: true
+
+    output: "Gate 2 report with pass/fail per check, scenario gap summary"
+
+
+  # ---------------------------------------------------------------------------
+  # GATE 3 — Contract Concreteness
+  # Runs after: contract.openapi.yml authoring (Step 3)
+  # Purpose: Ensure schemas are concrete enough for code generation
+  # ---------------------------------------------------------------------------
+  - id: "GATE-3"
+    name: "Contract Concreteness"
+    description: "Validates that API contracts have concrete schemas, align with scenarios, and cover error responses."
+    runs_after: "contract.openapi.yml authoring"
+    checks:
+      - id: "G3-01"
+        name: "Request schema concrete"
+        rule: "Request body schema has type: object with at least one property defined (not opaque)"
+        severity: "blocking"
+
+      - id: "G3-02"
+        name: "Response schema concrete"
+        rule: "Success response schema has type: object with at least one property defined (not opaque)"
+        severity: "blocking"
+
+      - id: "G3-03"
+        name: "Error response schema present"
+        rule: "At least one error response (4xx or 5xx) is defined with a schema"
+        severity: "blocking"
+
+      - id: "G3-04"
+        name: "No opaque objects"
+        rule: "No schema anywhere in the contract uses type: object without defining properties"
+        severity: "blocking"
+
+      - id: "G3-05"
+        name: "Scenario-contract field alignment"
+        rule: "Fields referenced in scenario Given/When/Then steps exist in request, response, or error schemas"
+        severity: "blocking"
+
+      - id: "G3-06"
+        name: "Error code coverage"
+        rule: "Each error scenario has a corresponding HTTP status code defined in the contract responses"
+        severity: "warning"
+
+      - id: "G3-07"
+        name: "Field examples present"
+        rule: "Schema properties include example values for documentation and test generation"
+        severity: "warning"
+
+      - id: "G3-08"
+        name: "Operation-count alignment"
+        rule: "The UC's primary-operation count matches its shape. Count = OpenAPI paths × HTTP methods + AsyncAPI produce operations (action: send); consumed events (action: receive) are the trigger, not a primary operation, and do not count. A task-named UC carries 1 primary operation (≤2 with a recorded rationale, e.g. a POST + status-GET pair). A pure-CRUD carve-out (manage-{entity}) allows up to 5 standard operations. Over the ceiling: split into one-actor-goal UCs, or move cross-operation flow into its own task-named orchestration UC with dependencies.calls to the atoms. Enforced by `ie spec lint`."
+        severity: "blocking"
+        curated_gated: true
+
+    output: "Gate 3 report with pass/fail per check, schema gap summary"
+
+
+  # ---------------------------------------------------------------------------
+  # GATE 4 — Readiness Check
+  # Runs after: full spec assembly (Step 4)
+  # Purpose: Final quality gate before spec enters review
+  # ---------------------------------------------------------------------------
+  - id: "GATE-4"
+    name: "Readiness Check"
+    description: "Runs the full readiness rubric, validates optional artifacts, and confirms the spec is ready for Phase 3 review."
+    runs_after: "full spec assembly"
+    checks:
+      - id: "G4-01"
+        name: "Readiness score >= threshold"
+        rule: "Readiness score from rubric evaluation meets the ready_threshold defined in config.yml (default: 80)"
+        severity: "blocking"
+        config_ref: "config/readiness-rubric.yml"
+
+      - id: "G4-02"
+        name: "All blocking rubric checks pass"
+        rule: "No individual rubric check with severity 'blocking' has a score of 0"
+        severity: "blocking"
+        config_ref: "config/readiness-rubric.yml"
+
+      - id: "G4-03"
+        name: "Flow diagram present if applicable"
+        rule: "If UC has 3+ scenarios or multi-step behavior, flow.mermaid exists and is non-empty"
+        severity: "warning"
+
+      - id: "G4-04"
+        name: "Dependencies registered in catalog"
+        rule: "All UC IDs in dependencies.calls and dependencies.called_by exist in catalog.yml"
+        severity: "warning"
+
+    output: "Gate 4 report with readiness score, pass/fail per check, final recommendation (ready / needs-work / blocked)"

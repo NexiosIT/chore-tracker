@@ -1,0 +1,43 @@
+# =============================================================================
+# IE Team Config — .ie/config.yml
+# =============================================================================
+# Team-wide defaults for the Intent Engineering tooling. This file is COMMITTED
+# and shared across everyone who works on this product-hub. It does NOT contain
+# any machine-specific paths — those live in .ie/workspace.yml (gitignored).
+#
+# Schema: @rp-flow/ie-core/schemas/ie-config.schema.json
+# Sibling file: .ie/workspace.yml (gitignored, per-machine service → path map)
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# WORKSPACE
+# -----------------------------------------------------------------------------
+# Controls how `ie workspace bootstrap` lays out service code repositories on
+# each engineer's machine. Engineers keep their own filesystem conventions;
+# these defaults just describe the team's preferred layout so everyone's
+# checkouts are consistent enough for scripts and commands to work.
+# -----------------------------------------------------------------------------
+workspace:
+  # Where service code repos live relative to product-hub.
+  #
+  #   sibling  — (default, recommended) alongside product-hub in a shared
+  #              parent directory:
+  #                  ~/dev/my-product/
+  #                    ├── product-hub/
+  #                    ├── customer-api/
+  #                    └── customer-web/
+  #
+  #   nested   — (opt-in, not recommended) inside product-hub. Confuses IDE
+  #              tooling and implies a submodule relationship that does not
+  #              exist.
+  #
+  #   custom   — under an engineer-chosen absolute path. Requires custom_root.
+  root_strategy: sibling
+
+  # Directory-name template for each cloned service. Supports the
+  # {service-slug} placeholder (the service's `name` field).
+  naming: "{service-slug}"
+
+  # Only used when root_strategy is 'custom'. Must be an absolute path.
+  # custom_root: /Users/you/work/services
