@@ -74,3 +74,4 @@ Record of all standards additions, modifications, and deprecations.
 | 2026-11-23 | deprecated | STD-022 | Event Consumer (Spring Kafka) — no message broker in this system |
 | 2026-11-23 | deprecated | STD-031 | GraphQL Code-to-Contract Conformance — the API is REST only |
 | 2026-11-23 | added | STD-043 | Flutter App Foundations — Material 3 theming, feature-first layout, typed API client, local notifications + background checks, minSdk 29, widget tests |
+| 2026-11-23 | updated | STD-002 | Error Handling Strategy — added `rate_limit` category mapped to 429 and Rule 11: every 429 carries a Retry-After header in seconds (needed by FT-001 UC-003 login lockout) |
