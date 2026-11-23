@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ie="https://rp-flow.dev/schema/bpmn/ie/1.0" id="definitions-kid-registration" targetNamespace="https://rp-flow.dev/flows">
+  <bpmn:process id="process-kid-registration" name="Kid registration" isExecutable="false">
+    <bpmn:laneSet id="lanes">
+      <bpmn:lane id="lane-kid" name="Kid">
+        <bpmn:flowNodeRef>start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-create-account</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-parent" name="Parent">
+        <bpmn:flowNodeRef>task-review-registration</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-registration-decision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-system" name="Chore Tracker">
+        <bpmn:flowNodeRef>task-notify-parents-registration</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-activate-login</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-can-log-in</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start" name="Kid wants to join">
+      <bpmn:outgoing>flow-start-create</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task-create-account" name="Create account with username and password" ie:domains="family">
+      <bpmn:incoming>flow-start-create</bpmn:incoming>
+      <bpmn:outgoing>flow-create-notify</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task-notify-parents-registration" name="Notify parents of pending registration" ie:domains="notifications">
+      <bpmn:incoming>flow-create-notify</bpmn:incoming>
+      <bpmn:outgoing>flow-notify-review</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task-review-registration" name="Review registration" ie:domains="family">
+      <bpmn:incoming>flow-notify-review</bpmn:incoming>
+      <bpmn:outgoing>flow-review-decision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw-registration-decision" name="Approve registration?">
+      <bpmn:incoming>flow-review-decision</bpmn:incoming>
+      <bpmn:outgoing>flow-approved</bpmn:outgoing>
+      <bpmn:outgoing>flow-rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task-activate-login" name="Activate kid&#39;s login" ie:domains="family">
+      <bpmn:incoming>flow-approved</bpmn:incoming>
+      <bpmn:outgoing>flow-activate-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end-can-log-in" name="Kid can log in">
+      <bpmn:incoming>flow-activate-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end-rejected" name="Registration rejected">
+      <bpmn:incoming>flow-rejected</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow-start-create" sourceRef="start" targetRef="task-create-account" />
+    <bpmn:sequenceFlow id="flow-create-notify" sourceRef="task-create-account" targetRef="task-notify-parents-registration" />
+    <bpmn:sequenceFlow id="flow-notify-review" sourceRef="task-notify-parents-registration" targetRef="task-review-registration" />
+    <bpmn:sequenceFlow id="flow-review-decision" sourceRef="task-review-registration" targetRef="gw-registration-decision" />
+    <bpmn:sequenceFlow id="flow-approved" name="Approved" sourceRef="gw-registration-decision" targetRef="task-activate-login" />
+    <bpmn:sequenceFlow id="flow-rejected" name="Rejected" sourceRef="gw-registration-decision" targetRef="end-rejected" />
+    <bpmn:sequenceFlow id="flow-activate-end" sourceRef="task-activate-login" targetRef="end-can-log-in" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_process-kid-registration">
+    <bpmndi:BPMNPlane id="BPMNPlane_process-kid-registration" bpmnElement="process-kid-registration">
+      <bpmndi:BPMNShape id="start_di" bpmnElement="start">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-create-account_di" bpmnElement="task-create-account">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-notify-parents-registration_di" bpmnElement="task-notify-parents-registration">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-review-registration_di" bpmnElement="task-review-registration">
+        <dc:Bounds x="475" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-registration-decision_di" bpmnElement="gw-registration-decision" isMarkerVisible="true">
+        <dc:Bounds x="650" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-activate-login_di" bpmnElement="task-activate-login">
+        <dc:Bounds x="775" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-can-log-in_di" bpmnElement="end-can-log-in">
+        <dc:Bounds x="957" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-rejected_di" bpmnElement="end-rejected">
+        <dc:Bounds x="807" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow-start-create_di" bpmnElement="flow-start-create">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-create-notify_di" bpmnElement="flow-create-notify">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-notify-review_di" bpmnElement="flow-notify-review">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="475" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-review-decision_di" bpmnElement="flow-review-decision">
+        <di:waypoint x="575" y="70" />
+        <di:waypoint x="650" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-approved_di" bpmnElement="flow-approved">
+        <di:waypoint x="700" y="70" />
+        <di:waypoint x="775" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-rejected_di" bpmnElement="flow-rejected">
+        <di:waypoint x="675" y="95" />
+        <di:waypoint x="675" y="210" />
+        <di:waypoint x="807" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-activate-end_di" bpmnElement="flow-activate-end">
+        <di:waypoint x="875" y="70" />
+        <di:waypoint x="957" y="70" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -3,7 +3,7 @@ id: STD-031
 name: "GraphQL Code-to-Contract Conformance"
 version: "1.0.0"
 category: api
-status: active
+status: deprecated
 last_reviewed: "2026-07-03"
 ---
 

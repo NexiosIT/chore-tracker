@@ -4,7 +4,7 @@ hub: "Chore Tracker"
 agent_runtime: "claude-code"
 model: "claude-opus-5-5"
 started_at: "2026-11-23T10:09:52Z"
-completed_at: null
+completed_at: "2026-11-23T11:06:16Z"
 entries:
   - id: BST-001
     step: 1
@@ -75,4 +75,314 @@ entries:
     artifact_affected: product/roadmap.md
     decision: "T-01, T-02, T-04 this-quarter; T-05, T-06 next-quarter; T-03 later"
     reasoning: "Engineer gave no horizons; agent sequenced the core chore loop, rewards and logins first, then planning and notifications, then reporting. Engineer accepted."
+    risk: low
+  - id: BST-008
+    step: 2
+    step_name: "Tech Stack"
+    type: user_decision
+    actor: user
+    subject: "Client platform"
+    artifact_affected: product/tech-stack.md
+    decision: "A separate Android app is the only client at this stage, used by parents and kids; no web app. An iPhone app may follow later"
+    reasoning: "Stated directly by the engineer; replaces the web app registered by ie init (to be corrected in Step 5)"
+    risk: high
+  - id: BST-009
+    step: 2
+    step_name: "Tech Stack"
+    type: rejection
+    actor: agent
+    subject: "Android framework"
+    artifact_affected: product/tech-stack.md
+    decision: "Flutter (Dart) instead of the recommended native Kotlin + Jetpack Compose"
+    reasoning: "Agent recommended Kotlin + Compose for an Android-only app and named Flutter as the choice if iOS is realistic; engineer chose Flutter and confirmed a possible iPhone app later"
+    risk: medium
+  - id: BST-010
+    step: 2
+    step_name: "Tech Stack"
+    type: suggestion
+    actor: agent
+    subject: "Backend language and runtime"
+    artifact_affected: product/tech-stack.md
+    decision: "Spring Boot 3.5.x in Kotlin 2.x on JVM 21"
+    reasoning: "Agent suggested Kotlin over Java and proposed JVM 21 / Kotlin 2.x; engineer accepted. Boot pinned to 3.5.x per the Foundation runbook (Initializr defaults to 4.x)"
+    risk: medium
+  - id: BST-011
+    step: 2
+    step_name: "Tech Stack"
+    type: suggestion
+    actor: agent
+    subject: "Database and data access"
+    artifact_affected: product/tech-stack.md
+    decision: "PostgreSQL via Spring Data JPA / Hibernate, Flyway migrations"
+    reasoning: "Agent offered this as an example; engineer answered 'OK'"
+    risk: medium
+  - id: BST-012
+    step: 2
+    step_name: "Tech Stack"
+    type: suggestion
+    actor: agent
+    subject: "Minimum Android version"
+    artifact_affected: product/tech-stack.md
+    decision: "Android 10 (API level 29) and newer"
+    reasoning: "Engineer required 'all newer Android versions'; agent proposed API 29 as the concrete floor and the engineer accepted"
+    risk: medium
+  - id: BST-013
+    step: 2
+    step_name: "Tech Stack"
+    type: interpretation
+    actor: agent
+    subject: "Meaning of 'no private data is kept'"
+    artifact_affected: product/tech-stack.md
+    decision: "Store only usernames, chores, points and rewards; no real names, contact details or payment details"
+    reasoning: "Engineer's statement was open-ended; agent made it concrete and the engineer confirmed"
+    risk: medium
+  - id: BST-014
+    step: 2
+    step_name: "Tech Stack"
+    type: interpretation
+    actor: agent
+    subject: "Data visibility within the family"
+    artifact_affected: product/tech-stack.md
+    decision: "Nobody outside the family sees anything; parents see everything; kids see their own chores, points and reports plus the family leaderboard"
+    reasoning: "Engineer said 'kids data is only visible to parents' but themes give kids their own reports and a leaderboard; engineer clarified 'nobody outside the family sees anything'"
+    risk: medium
+  - id: BST-015
+    step: 2
+    step_name: "Tech Stack"
+    type: override
+    actor: user
+    subject: "Gate 2 warning: deployment target not documented"
+    artifact_affected: product/tech-stack.md
+    decision: "Proceed with deployment, CI/CD and app distribution recorded as TBD"
+    reasoning: "Engineer answered 'TBD' for deployment and accepted the tech stack draft with the warning shown"
+    risk: medium
+  - id: BST-016
+    step: 3
+    step_name: "Domain Registry"
+    type: suggestion
+    actor: agent
+    subject: "Bounded contexts and entity names"
+    artifact_affected: domain-model.yml
+    decision: "Contexts family (family-member, registration), chores (chore, chore-template), rewards (points-entry, exchange-rate, redemption), notifications (notification)"
+    reasoning: "Agent proposed names and grouping from the mission, roadmap and earlier answers; engineer agreed without changes"
+    risk: high
+  - id: BST-017
+    step: 3
+    step_name: "Domain Registry"
+    type: suggestion
+    actor: agent
+    subject: "Streaks and leaderboard as derived views, not entities"
+    artifact_affected: domain-model.yml
+    decision: "No streak or leaderboard entity; both are calculated from completed chores and points entries. Streaks are shown on the leaderboard as a weekly incentive"
+    reasoning: "Agent suggested deriving them; engineer agreed as long as they can be calculated"
+    risk: medium
+  - id: BST-018
+    step: 3
+    step_name: "Domain Registry"
+    type: user_decision
+    actor: user
+    subject: "Chore assignment model"
+    artifact_affected: domain-model.yml
+    decision: "A chore is assigned to one kid or to a group of kids, first come first served; captured in the chore definition rather than as a separate assignment entity"
+    reasoning: "Engineer stated both assignment modes; agent judged a separate entity unnecessary at bootstrap since the registry holds no fields or relationships"
+    risk: medium
+  - id: BST-019
+    step: 3
+    step_name: "Domain Registry"
+    type: user_decision
+    actor: user
+    subject: "Redemption approval"
+    artifact_affected: domain-model.yml
+    decision: "Cashing in points needs no separate parent approval; approval happens at chore level only"
+    reasoning: "Stated directly by the engineer"
+    risk: medium
+  - id: BST-020
+    step: 3
+    step_name: "Domain Registry"
+    type: interpretation
+    actor: agent
+    subject: "Alias for redemption"
+    artifact_affected: domain-model.yml
+    decision: "Entity named 'redemption' with alias 'cash-in'"
+    reasoning: "Engineer accepted 'redemption' but uses 'cash in' in conversation; alias keeps both resolvable"
+    risk: low
+  - id: BST-021
+    step: 4
+    step_name: "Glossary"
+    type: user_decision
+    actor: user
+    subject: "Redemption fulfilment"
+    artifact_affected: domain-model.yml
+    decision: "A redemption needs no approval, but a parent marks it as granted once the pocket money or screen time has actually been given"
+    reasoning: "Engineer added this during glossary review; reflected in the redemption entity definition and a new 'Granted' glossary term"
+    risk: medium
+  - id: BST-022
+    step: 4
+    step_name: "Glossary"
+    type: rejection
+    actor: agent
+    subject: "Definition of streak"
+    artifact_affected: product/glossary.md
+    decision: "Streak is any calculated incentive measure (most chores per week, most points per week, most consecutive weeks with points earned), not only consecutive weeks"
+    reasoning: "Agent proposed 'consecutive weeks with at least one chore'; engineer widened it to anything that incentivises chore completion"
+    risk: low
+  - id: BST-023
+    step: 4
+    step_name: "Glossary"
+    type: rejection
+    actor: agent
+    subject: "Leaderboard period"
+    artifact_affected: product/glossary.md
+    decision: "Leaderboard ranks kids by points over selectable periods: all time, per week, per month"
+    reasoning: "Agent proposed a weekly-only ranking; engineer asked for all-time plus weekly and monthly views"
+    risk: low
+  - id: BST-024
+    step: 4
+    step_name: "Glossary"
+    type: interpretation
+    actor: agent
+    subject: "Coins as synonym for points"
+    artifact_affected: product/glossary.md
+    decision: "Recorded 'coins' as another name for points"
+    reasoning: "Engineer wrote 'most coins per week' when describing streaks"
+    risk: low
+  - id: BST-025
+    step: 4
+    step_name: "Glossary"
+    type: user_decision
+    actor: user
+    subject: "When redemption points are deducted"
+    artifact_affected: domain-model.yml
+    decision: "Points are deducted only when a parent marks the redemption as granted, not when the kid requests it"
+    reasoning: "Stated directly by the engineer in answer to the agent's open question"
+    risk: medium
+  - id: BST-026
+    step: 5
+    step_name: "App Landscape"
+    type: rejection
+    actor: agent
+    subject: "Code repository layout"
+    artifact_affected: services/chore-tracker-api.yml
+    decision: "Both services (chore-tracker-api and chore-tracker-app) live in one code repo, NexiosIT/chore-tracker-code, separate from the hub repo"
+    reasoning: "Engineer first asked for everything in the hub repo; agent explained IE needs the hub separate and maps one service to one checkout, and recommended two code repos. Engineer chose a single extra repo for both. Both service entries share git_remote; ie doctor raised no error, but shared .flowforge/ and generation branches are a known risk"
+    risk: high
+  - id: BST-027
+    step: 5
+    step_name: "App Landscape"
+    type: suggestion
+    actor: agent
+    subject: "Service names and code repo name"
+    artifact_affected: services/chore-tracker-api.yml
+    decision: "Services chore-tracker-api (backend; owns family, chores, rewards, notifications) and chore-tracker-app (frontend; app chore-tracker); repo NexiosIT/chore-tracker-code"
+    reasoning: "Agent proposed the two-service split, which the engineer accepted; the repo name was chosen by the agent after the engineer asked for one shared repo"
+    risk: high
+  - id: BST-028
+    step: 5
+    step_name: "App Landscape"
+    type: suggestion
+    actor: agent
+    subject: "Notification delivery"
+    artifact_affected: product/application-landscape.md
+    decision: "No external push service: local Android notifications for due-soon reminders, plus a background API check roughly every 15 minutes; Firebase Cloud Messaging can be added later"
+    reasoning: "Engineer asked whether Android can notify without an external service; agent explained the limits and recommended this approach, which the engineer accepted"
+    risk: medium
+  - id: BST-029
+    step: 5
+    step_name: "App Landscape"
+    type: user_decision
+    actor: user
+    subject: "Vendor design system"
+    artifact_affected: product/application-landscape.md
+    decision: "No vendor binding; hand-authored design-system/ kept close to Material Design 3 (the design system behind Google Calendar)"
+    reasoning: "Engineer asked for the Google Calendar look; agent mapped it to Material Design 3 without copying Google Calendar branding, and the engineer agreed"
+    risk: medium
+  - id: BST-030
+    step: 5
+    step_name: "App Landscape"
+    type: interpretation
+    actor: agent
+    subject: "App entry in config.yml"
+    artifact_affected: config.yml
+    decision: "App chore-tracker changed from 'Chore Tracker Web App' (type web) to 'Chore Tracker Android App' (type mobile)"
+    reasoning: "ie init registered a web app; the engineer chose an Android-only client in Step 2"
+    risk: medium
+  - id: BST-031
+    step: 6
+    step_name: "Standards"
+    type: suggestion
+    actor: agent
+    subject: "Off-stack seed standards"
+    artifact_affected: standards/index.yml
+    decision: "Removed the 5 Next.js standards (STD-004, STD-010..013) and the nextjs category; deprecated Kafka (STD-021, STD-022) and GraphQL (STD-031) standards"
+    reasoning: "Agent proposed deprecating them; engineer agreed. Deprecated Next.js entries still triggered an ie doctor drift warning, so the agent removed them instead (recorded in standards/changelog.md, recoverable from git history)"
+    risk: medium
+  - id: BST-032
+    step: 6
+    step_name: "Standards"
+    type: suggestion
+    actor: agent
+    subject: "Spring Boot standards with a Kotlin backend"
+    artifact_affected: standards/spring-boot/README.md
+    decision: "Kept STD-006..009 active with a note that rules apply with Kotlin idioms; Kotlin rewrites of the examples deferred to /ie/shape-standard"
+    reasoning: "Seeded examples are Java; the engineer chose Kotlin in Step 2"
+    risk: medium
+  - id: BST-033
+    step: 6
+    step_name: "Standards"
+    type: suggestion
+    actor: agent
+    subject: "Flutter starter standard"
+    artifact_affected: standards/flutter/STD-043-flutter-app-foundations.md
+    decision: "Added flutter category and STD-043 Flutter App Foundations (Material 3 theming, feature-first layout, typed API client, local notifications + background checks, minSdk 29, widget tests); further Flutter standards to emerge from the pathfinder feature"
+    reasoning: "ie doctor flagged the missing flutter standards directory. STD-043 chosen over the free STD-036 because the seed changelog already records STD-036..042 for Playwright standards not present in this hub"
+    risk: medium
+  - id: BST-034
+    step: 7
+    step_name: "Validation"
+    type: user_decision
+    actor: user
+    subject: "Missed timer consequence"
+    artifact_affected: domain-model.yml
+    decision: "When a chore's timer runs out the reward is halved (no negative points); the chore stays open until the kid completes it or a parent removes it"
+    reasoning: "Engineer answered while confirming the parent-assigned-chore flow; supersedes the earlier 'negative points' wording in the glossary, points-entry definition and roadmap T-01"
+    risk: medium
+  - id: BST-035
+    step: 7
+    step_name: "Validation"
+    type: user_decision
+    actor: user
+    subject: "Points on kid-added chores and cash-in balance check"
+    artifact_affected: product/glossary.md
+    decision: "The parent sets the points when approving a kid-added chore; a cash-in request is refused if the kid lacks enough points, so a balance can never go negative"
+    reasoning: "Engineer answered the open questions on the kid-added-chore and cash-in flows"
+    risk: medium
+  - id: BST-036
+    step: 7
+    step_name: "Validation"
+    type: user_decision
+    actor: user
+    subject: "Hub data model"
+    artifact_affected: product/erd.mermaid
+    decision: "Drew product/erd.mermaid with ie erd init; all 8 registry entities start as planned tables"
+    reasoning: "Engineer chose to draw it now; no service is linked yet so only the registry was read"
+    risk: low
+  - id: BST-037
+    step: 7
+    step_name: "Validation"
+    type: user_decision
+    actor: user
+    subject: "Product flows"
+    artifact_affected: product/flows/
+    decision: "Wrote four flows: kid-registration, parent-assigned-chore, kid-added-chore, cash-in. Steps are tagged with domains only; epic and use-case tags left out because the roadmap has themes, not epics, and the catalog is empty"
+    reasoning: "Engineer chose to describe flows and accepted the agent's four proposed processes"
+    risk: low
+  - id: BST-038
+    step: 7
+    step_name: "Validation"
+    type: override
+    actor: user
+    subject: "Final Gate: ie doctor workspace warnings"
+    artifact_affected: services/
+    decision: "Bootstrap completed with 2 ie doctor warnings: chore-tracker-api and chore-tracker-app are not registered in .ie/workspace.yml"
+    reasoning: "Expected before Phase 0b; the code repo NexiosIT/chore-tracker-code does not exist yet and is registered by ie service init in the Foundation runbook"
     risk: low

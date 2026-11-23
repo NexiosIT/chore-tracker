@@ -1,0 +1,18 @@
+name: "chore-tracker-app"
+repo: "NexiosIT/chore-tracker-code"
+git_remote: "https://github.com/NexiosIT/chore-tracker-code.git"
+type: "frontend"
+language: "dart"
+framework: "flutter"
+description: "Flutter Android app used by parents and kids to manage chores, approvals, points, cash-ins, leaderboards and reminders."
+app: "chore-tracker"
+screen_domains:
+  - "family"
+  - "chores"
+  - "rewards"
+  - "notifications"
+dependencies:
+  - "chore-tracker-api"
+infrastructure:
+  deployment_target: "android-device"
+  scaling_profile: "client"

@@ -65,3 +65,12 @@ Record of all standards additions, modifications, and deprecations.
 | 2026-10-08 | added | STD-040 | Playwright Waiting & Assertions — no fixed waits; web-first assertions; `expect.poll`/`toPass` for state outside the DOM; listen before acting; no `networkidle`, `waitForNavigation` or forced actions; every test asserts an outcome |
 | 2026-10-08 | added | STD-041 | Playwright Network Mocking — the product's own API answers for real (routed only to inject a failure); third parties routed through typed fixtures; analytics blocked by an auto fixture; specific handlers that fall back |
 | 2026-10-08 | added | STD-042 | Playwright Authentication State — a setup project signs in through the real login once per role and saves storage state; never mint or inject a session; mutating tests get their own account; login tested without state |
+| 2026-11-23 | removed | STD-004 | Component Structure (Next.js) — no Next.js service; the client is a Flutter Android app; directory and index entry removed |
+| 2026-11-23 | removed | STD-010 | API Client Hooks (Next.js) — no Next.js service; directory and index entry removed |
+| 2026-11-23 | removed | STD-011 | Form Patterns (Next.js) — no Next.js service; directory and index entry removed |
+| 2026-11-23 | removed | STD-012 | Component Patterns (Next.js) — no Next.js service; directory and index entry removed |
+| 2026-11-23 | removed | STD-013 | Page Structure (Next.js) — no Next.js service; directory and index entry removed |
+| 2026-11-23 | deprecated | STD-021 | Event Publisher (Spring Kafka) — no message broker in this system |
+| 2026-11-23 | deprecated | STD-022 | Event Consumer (Spring Kafka) — no message broker in this system |
+| 2026-11-23 | deprecated | STD-031 | GraphQL Code-to-Contract Conformance — the API is REST only |
+| 2026-11-23 | added | STD-043 | Flutter App Foundations — Material 3 theming, feature-first layout, typed API client, local notifications + background checks, minSdk 29, widget tests |

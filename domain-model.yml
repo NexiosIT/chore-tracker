@@ -13,4 +13,29 @@
 
 version: 1
 status: draft
-contexts: {}
+contexts:
+  family:
+    entities:
+      family-member:
+        definition: "A parent or kid in the family, with their own username and password login."
+      registration:
+        definition: "A kid's sign-up request that stays pending until a parent approves it."
+  chores:
+    entities:
+      chore:
+        definition: "A task worth a set number of points, with an optional timer (once it runs out the reward is halved and the chore stays open until completed or removed by a parent), created by a parent or added by a kid (kid-added chores need parent approval) and assigned to one kid or to a group of kids on a first-come-first-served basis."
+      chore-template:
+        definition: "A reusable chore definition with fixed points that parents use to create chores again later."
+  rewards:
+    entities:
+      points-entry:
+        definition: "One change to a kid's points balance: a credit for a completed chore (half the reward if its timer was missed) or a deduction for a granted redemption. A balance can never go negative."
+      exchange-rate:
+        definition: "The parent-set value of points in pocket money and in screen time."
+      redemption:
+        definition: "A kid's request to convert points into pocket money or screen time at the current exchange rate; it needs no parent approval, but a parent marks it as granted once the money or screen time has actually been given, and only then are the points deducted."
+        aliases: ["cash-in"]
+  notifications:
+    entities:
+      notification:
+        definition: "An in-app message to a family member, such as chore assigned, chore due soon, chore needs approval, or chore completed."

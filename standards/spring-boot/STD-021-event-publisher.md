@@ -3,7 +3,7 @@ id: STD-021
 name: "Event Publisher (Spring Kafka)"
 version: "1.0.0"
 category: spring-boot
-status: active
+status: deprecated
 last_reviewed: "2026-05-29"
 discovery_layer: "manual"
 ---

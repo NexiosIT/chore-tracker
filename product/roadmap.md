@@ -40,7 +40,7 @@ Phase 0 bootstrap.
 
 ### T-01 — Kids get through their chores without being chased, with clear deadlines only where they matter
 
-Some chores carry a timer set by a parent, and missing it costs the kid points. Other chores are ad hoc: a kid can pick them up and complete them whenever they like, without being chased or penalised. Kids benefit from knowing exactly which chores are time-critical, and parents stop having to remind them about everything.
+Some chores carry a timer set by a parent, and missing it halves the reward. Other chores are ad hoc: a kid can pick them up and complete them whenever they like, without being chased or penalised. Kids benefit from knowing exactly which chores are time-critical, and parents stop having to remind them about everything.
 
 ### T-02 — Every chore pays out fairly, with parents approving only what kids add themselves
 
