@@ -21,8 +21,9 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: ''
-contract_hashes: {}
+spec_hash: 3a2417cfdd325d411a79b3499c743d00e700a4bd154bc92cd68a023306c9805f
+contract_hashes:
+  Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
 endpoint: DELETE /api/sessions/current
 entities:
   - session

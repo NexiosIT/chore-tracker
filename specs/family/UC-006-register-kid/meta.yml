@@ -27,8 +27,11 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: ''
-contract_hashes: {}
+spec_hash: e970808c3c3c561837515ce99b8f2994cb6bfa0d2b9b0107626e2663b936646d
+contract_hashes:
+  RegisterKidRequest: aba95e42685d520259cca4d3fffd994c4c2914bf918cb264d4f76cc613420c5b
+  Registration: cafb8eefd83f54128d408bbe52b714c67033474e5a468feb9b7a15d7276f60d0
+  Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
 endpoint: POST /api/registrations
 entities:
   - registration

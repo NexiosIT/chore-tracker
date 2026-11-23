@@ -26,8 +26,10 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: ''
-contract_hashes: {}
+spec_hash: f46671a84a2a27e67fcb55e4e5648f2c6171dc0c8b8dd8b752268d167d5187ec
+contract_hashes:
+  ResetMemberPasswordRequest: bcdc591cd42525a0c8ee6996707a1b0d7ff5ce9777a82d1bd82af561587e3d3f
+  Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
 endpoint: PUT /api/members/{memberId}/password
 entities:
   - family-member

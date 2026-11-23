@@ -25,8 +25,11 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: ''
-contract_hashes: {}
+spec_hash: 5f16e630691704a4de41f04a4f1489a1f49093a7895535dd640abf653e1600ef
+contract_hashes:
+  AddParentRequest: aba95e42685d520259cca4d3fffd994c4c2914bf918cb264d4f76cc613420c5b
+  Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+  Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
 endpoint: POST /api/members/parents
 entities:
   - family-member
