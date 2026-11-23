@@ -12,7 +12,7 @@
 
 | Tier | Framework | Version |
 |------|-----------|---------|
-| Backend | Spring Boot | 3.5.x (not 4.x) |
+| Backend | Spring Boot | 4.0.x |
 | Mobile (Android) | Flutter | current stable channel |
 
 The family uses only the Android app; there is no web client at this stage. Flutter was chosen over native Kotlin/Jetpack Compose so that an iPhone app can be added later from the same codebase.

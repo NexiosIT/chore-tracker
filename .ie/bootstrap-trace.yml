@@ -386,3 +386,13 @@ entries:
     decision: "Bootstrap completed with 2 ie doctor warnings: chore-tracker-api and chore-tracker-app are not registered in .ie/workspace.yml"
     reasoning: "Expected before Phase 0b; the code repo NexiosIT/chore-tracker-code does not exist yet and is registered by ie service init in the Foundation runbook"
     risk: low
+  - id: BST-039
+    step: 2
+    step_name: "Tech Stack"
+    type: user_decision
+    actor: user
+    subject: "Spring Boot major version (revised during Phase 0b)"
+    artifact_affected: product/tech-stack.md
+    decision: "Spring Boot 4.0.x instead of 3.5.x; backend scaffolded with Boot 4.0.10, Kotlin 2.2, Java 21"
+    reasoning: "Spring Initializr no longer offers Boot 3.5.x. Engineer chose to move to Boot 4.0 rather than hand-pin the build to 3.5.16. The seeded Spring standards (STD-006..009) may need their examples adjusted for Boot 4 starter names"
+    risk: medium
