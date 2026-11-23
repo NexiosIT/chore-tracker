@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ie="https://rp-flow.dev/schema/bpmn/ie/1.0" id="definitions-parent-assigned-chore" targetNamespace="https://rp-flow.dev/flows">
+  <bpmn:process id="process-parent-assigned-chore" name="Parent-assigned chore" isExecutable="false">
+    <bpmn:laneSet id="lanes">
+      <bpmn:lane id="lane-parent" name="Parent">
+        <bpmn:flowNodeRef>start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-create-chore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-remove-chore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-removed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-kid" name="Kid">
+        <bpmn:flowNodeRef>task-accept-chore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-complete-chore</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-system" name="Chore Tracker">
+        <bpmn:flowNodeRef>task-notify-assigned-kids</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-has-timer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-schedule-due-reminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-timer-merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-what-happens</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-in-time</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-credit-full-points</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-credit-half-points</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-notify-parents-completed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-points-credited</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start" name="Parent wants a chore done">
+      <bpmn:outgoing>flow-start-create</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task-create-chore" name="Create and assign chore, from a template or new, with points and optional timer" ie:domains="chores">
+      <bpmn:incoming>flow-start-create</bpmn:incoming>
+      <bpmn:outgoing>flow-create-notify</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task-notify-assigned-kids" name="Notify assigned kids" ie:domains="notifications">
+      <bpmn:incoming>flow-create-notify</bpmn:incoming>
+      <bpmn:outgoing>flow-notify-accept</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task-accept-chore" name="Accept chore (first kid wins for a group chore)" ie:domains="chores">
+      <bpmn:incoming>flow-notify-accept</bpmn:incoming>
+      <bpmn:outgoing>flow-accept-timer</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw-has-timer" name="Timer set?">
+      <bpmn:incoming>flow-accept-timer</bpmn:incoming>
+      <bpmn:outgoing>flow-timer-yes</bpmn:outgoing>
+      <bpmn:outgoing>flow-timer-no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task-schedule-due-reminder" name="Schedule due-soon reminder" ie:domains="notifications">
+      <bpmn:incoming>flow-timer-yes</bpmn:incoming>
+      <bpmn:outgoing>flow-reminder-merge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gw-timer-merge">
+      <bpmn:incoming>flow-timer-no</bpmn:incoming>
+      <bpmn:incoming>flow-reminder-merge</bpmn:incoming>
+      <bpmn:outgoing>flow-merge-what</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw-what-happens" name="What happens first?">
+      <bpmn:incoming>flow-merge-what</bpmn:incoming>
+      <bpmn:outgoing>flow-kid-completes</bpmn:outgoing>
+      <bpmn:outgoing>flow-parent-removes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task-complete-chore" name="Mark chore as done" ie:domains="chores">
+      <bpmn:incoming>flow-kid-completes</bpmn:incoming>
+      <bpmn:outgoing>flow-complete-intime</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task-remove-chore" name="Remove chore" ie:domains="chores">
+      <bpmn:incoming>flow-parent-removes</bpmn:incoming>
+      <bpmn:outgoing>flow-remove-end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw-in-time" name="Completed before the timer ran out?">
+      <bpmn:incoming>flow-complete-intime</bpmn:incoming>
+      <bpmn:outgoing>flow-in-time</bpmn:outgoing>
+      <bpmn:outgoing>flow-late</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task-credit-full-points" name="Credit full points" ie:domains="rewards">
+      <bpmn:incoming>flow-in-time</bpmn:incoming>
+      <bpmn:outgoing>flow-full-notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task-credit-half-points" name="Credit half the points" ie:domains="rewards">
+      <bpmn:incoming>flow-late</bpmn:incoming>
+      <bpmn:outgoing>flow-half-notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task-notify-parents-completed" name="Notify parents of completed chore" ie:domains="notifications">
+      <bpmn:incoming>flow-full-notify</bpmn:incoming>
+      <bpmn:incoming>flow-half-notify</bpmn:incoming>
+      <bpmn:outgoing>flow-notify-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end-points-credited" name="Points credited">
+      <bpmn:incoming>flow-notify-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end-removed" name="Chore removed">
+      <bpmn:incoming>flow-remove-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow-start-create" sourceRef="start" targetRef="task-create-chore" />
+    <bpmn:sequenceFlow id="flow-create-notify" sourceRef="task-create-chore" targetRef="task-notify-assigned-kids" />
+    <bpmn:sequenceFlow id="flow-notify-accept" sourceRef="task-notify-assigned-kids" targetRef="task-accept-chore" />
+    <bpmn:sequenceFlow id="flow-accept-timer" sourceRef="task-accept-chore" targetRef="gw-has-timer" />
+    <bpmn:sequenceFlow id="flow-timer-yes" name="Yes" sourceRef="gw-has-timer" targetRef="task-schedule-due-reminder" />
+    <bpmn:sequenceFlow id="flow-timer-no" name="No" sourceRef="gw-has-timer" targetRef="gw-timer-merge" />
+    <bpmn:sequenceFlow id="flow-reminder-merge" sourceRef="task-schedule-due-reminder" targetRef="gw-timer-merge" />
+    <bpmn:sequenceFlow id="flow-merge-what" sourceRef="gw-timer-merge" targetRef="gw-what-happens" />
+    <bpmn:sequenceFlow id="flow-kid-completes" name="Kid completes the chore" sourceRef="gw-what-happens" targetRef="task-complete-chore" />
+    <bpmn:sequenceFlow id="flow-parent-removes" name="Parent removes the chore" sourceRef="gw-what-happens" targetRef="task-remove-chore" />
+    <bpmn:sequenceFlow id="flow-remove-end" sourceRef="task-remove-chore" targetRef="end-removed" />
+    <bpmn:sequenceFlow id="flow-complete-intime" sourceRef="task-complete-chore" targetRef="gw-in-time" />
+    <bpmn:sequenceFlow id="flow-in-time" name="Yes, or no timer" sourceRef="gw-in-time" targetRef="task-credit-full-points" />
+    <bpmn:sequenceFlow id="flow-late" name="No, timer ran out" sourceRef="gw-in-time" targetRef="task-credit-half-points" />
+    <bpmn:sequenceFlow id="flow-full-notify" sourceRef="task-credit-full-points" targetRef="task-notify-parents-completed" />
+    <bpmn:sequenceFlow id="flow-half-notify" sourceRef="task-credit-half-points" targetRef="task-notify-parents-completed" />
+    <bpmn:sequenceFlow id="flow-notify-end" sourceRef="task-notify-parents-completed" targetRef="end-points-credited" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_process-parent-assigned-chore">
+    <bpmndi:BPMNPlane id="BPMNPlane_process-parent-assigned-chore" bpmnElement="process-parent-assigned-chore">
+      <bpmndi:BPMNShape id="start_di" bpmnElement="start">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-create-chore_di" bpmnElement="task-create-chore">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-notify-assigned-kids_di" bpmnElement="task-notify-assigned-kids">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-accept-chore_di" bpmnElement="task-accept-chore">
+        <dc:Bounds x="475" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-has-timer_di" bpmnElement="gw-has-timer" isMarkerVisible="true">
+        <dc:Bounds x="650" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-schedule-due-reminder_di" bpmnElement="task-schedule-due-reminder">
+        <dc:Bounds x="775" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-timer-merge_di" bpmnElement="gw-timer-merge" isMarkerVisible="true">
+        <dc:Bounds x="950" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-what-happens_di" bpmnElement="gw-what-happens" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-complete-chore_di" bpmnElement="task-complete-chore">
+        <dc:Bounds x="1225" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-in-time_di" bpmnElement="gw-in-time" isMarkerVisible="true">
+        <dc:Bounds x="1400" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-credit-full-points_di" bpmnElement="task-credit-full-points">
+        <dc:Bounds x="1525" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-notify-parents-completed_di" bpmnElement="task-notify-parents-completed">
+        <dc:Bounds x="1675" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-points-credited_di" bpmnElement="end-points-credited">
+        <dc:Bounds x="1857" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-remove-chore_di" bpmnElement="task-remove-chore">
+        <dc:Bounds x="1225" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-removed_di" bpmnElement="end-removed">
+        <dc:Bounds x="1407" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-credit-half-points_di" bpmnElement="task-credit-half-points">
+        <dc:Bounds x="1675" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow-start-create_di" bpmnElement="flow-start-create">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-create-notify_di" bpmnElement="flow-create-notify">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-notify-accept_di" bpmnElement="flow-notify-accept">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="475" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-accept-timer_di" bpmnElement="flow-accept-timer">
+        <di:waypoint x="575" y="70" />
+        <di:waypoint x="650" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-timer-yes_di" bpmnElement="flow-timer-yes">
+        <di:waypoint x="700" y="70" />
+        <di:waypoint x="775" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-timer-no_di" bpmnElement="flow-timer-no">
+        <di:waypoint x="675" y="95" />
+        <di:waypoint x="675" y="140" />
+        <di:waypoint x="975" y="140" />
+        <di:waypoint x="975" y="95" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-reminder-merge_di" bpmnElement="flow-reminder-merge">
+        <di:waypoint x="875" y="70" />
+        <di:waypoint x="950" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-merge-what_di" bpmnElement="flow-merge-what">
+        <di:waypoint x="1000" y="70" />
+        <di:waypoint x="1100" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-kid-completes_di" bpmnElement="flow-kid-completes">
+        <di:waypoint x="1150" y="70" />
+        <di:waypoint x="1225" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-parent-removes_di" bpmnElement="flow-parent-removes">
+        <di:waypoint x="1125" y="95" />
+        <di:waypoint x="1125" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-complete-intime_di" bpmnElement="flow-complete-intime">
+        <di:waypoint x="1325" y="70" />
+        <di:waypoint x="1400" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-in-time_di" bpmnElement="flow-in-time">
+        <di:waypoint x="1450" y="70" />
+        <di:waypoint x="1525" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-late_di" bpmnElement="flow-late">
+        <di:waypoint x="1450" y="70" />
+        <di:waypoint x="1500" y="70" />
+        <di:waypoint x="1500" y="140" />
+        <di:waypoint x="1650" y="140" />
+        <di:waypoint x="1650" y="210" />
+        <di:waypoint x="1675" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-full-notify_di" bpmnElement="flow-full-notify">
+        <di:waypoint x="1625" y="70" />
+        <di:waypoint x="1675" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-notify-end_di" bpmnElement="flow-notify-end">
+        <di:waypoint x="1775" y="70" />
+        <di:waypoint x="1857" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-remove-end_di" bpmnElement="flow-remove-end">
+        <di:waypoint x="1325" y="210" />
+        <di:waypoint x="1407" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-half-notify_di" bpmnElement="flow-half-notify">
+        <di:waypoint x="1725" y="170" />
+        <di:waypoint x="1725" y="110" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

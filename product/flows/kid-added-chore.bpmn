@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ie="https://rp-flow.dev/schema/bpmn/ie/1.0" id="definitions-kid-added-chore" targetNamespace="https://rp-flow.dev/flows">
+  <bpmn:process id="process-kid-added-chore" name="Kid-added chore" isExecutable="false">
+    <bpmn:laneSet id="lanes">
+      <bpmn:lane id="lane-kid" name="Kid">
+        <bpmn:flowNodeRef>start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-add-chore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-complete-chore</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-parent" name="Parent">
+        <bpmn:flowNodeRef>task-review-chore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-approval-decision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-system" name="Chore Tracker">
+        <bpmn:flowNodeRef>task-notify-parents-approval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-already-done</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-notify-parents-completed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-credit-points</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-points-credited</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start" name="Kid wants credit for a chore">
+      <bpmn:outgoing>flow-start-add</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task-add-chore" name="Add chore to do, or log an ad-hoc chore already done" ie:domains="chores">
+      <bpmn:incoming>flow-start-add</bpmn:incoming>
+      <bpmn:outgoing>flow-add-notify</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task-notify-parents-approval" name="Notify parents that approval is needed" ie:domains="notifications">
+      <bpmn:incoming>flow-add-notify</bpmn:incoming>
+      <bpmn:outgoing>flow-notify-review</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task-review-chore" name="Review chore and set its points" ie:domains="chores">
+      <bpmn:incoming>flow-notify-review</bpmn:incoming>
+      <bpmn:outgoing>flow-review-decision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw-approval-decision" name="Approve chore?">
+      <bpmn:incoming>flow-review-decision</bpmn:incoming>
+      <bpmn:outgoing>flow-rejected</bpmn:outgoing>
+      <bpmn:outgoing>flow-approved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw-already-done" name="Already done?">
+      <bpmn:incoming>flow-approved</bpmn:incoming>
+      <bpmn:outgoing>flow-done-yes</bpmn:outgoing>
+      <bpmn:outgoing>flow-done-no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task-complete-chore" name="Mark chore as done" ie:domains="chores">
+      <bpmn:incoming>flow-done-no</bpmn:incoming>
+      <bpmn:outgoing>flow-complete-notify</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task-notify-parents-completed" name="Notify parents of completed chore" ie:domains="notifications">
+      <bpmn:incoming>flow-complete-notify</bpmn:incoming>
+      <bpmn:outgoing>flow-notify-credit</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task-credit-points" name="Credit points" ie:domains="rewards">
+      <bpmn:incoming>flow-done-yes</bpmn:incoming>
+      <bpmn:incoming>flow-notify-credit</bpmn:incoming>
+      <bpmn:outgoing>flow-credit-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end-points-credited" name="Points credited">
+      <bpmn:incoming>flow-credit-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end-rejected" name="Chore rejected, no points">
+      <bpmn:incoming>flow-rejected</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow-start-add" sourceRef="start" targetRef="task-add-chore" />
+    <bpmn:sequenceFlow id="flow-add-notify" sourceRef="task-add-chore" targetRef="task-notify-parents-approval" />
+    <bpmn:sequenceFlow id="flow-notify-review" sourceRef="task-notify-parents-approval" targetRef="task-review-chore" />
+    <bpmn:sequenceFlow id="flow-review-decision" sourceRef="task-review-chore" targetRef="gw-approval-decision" />
+    <bpmn:sequenceFlow id="flow-rejected" name="Rejected" sourceRef="gw-approval-decision" targetRef="end-rejected" />
+    <bpmn:sequenceFlow id="flow-approved" name="Approved" sourceRef="gw-approval-decision" targetRef="gw-already-done" />
+    <bpmn:sequenceFlow id="flow-done-yes" name="Yes" sourceRef="gw-already-done" targetRef="task-credit-points" />
+    <bpmn:sequenceFlow id="flow-done-no" name="No" sourceRef="gw-already-done" targetRef="task-complete-chore" />
+    <bpmn:sequenceFlow id="flow-complete-notify" sourceRef="task-complete-chore" targetRef="task-notify-parents-completed" />
+    <bpmn:sequenceFlow id="flow-notify-credit" sourceRef="task-notify-parents-completed" targetRef="task-credit-points" />
+    <bpmn:sequenceFlow id="flow-credit-end" sourceRef="task-credit-points" targetRef="end-points-credited" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_process-kid-added-chore">
+    <bpmndi:BPMNPlane id="BPMNPlane_process-kid-added-chore" bpmnElement="process-kid-added-chore">
+      <bpmndi:BPMNShape id="start_di" bpmnElement="start">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-add-chore_di" bpmnElement="task-add-chore">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-notify-parents-approval_di" bpmnElement="task-notify-parents-approval">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-review-chore_di" bpmnElement="task-review-chore">
+        <dc:Bounds x="475" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-approval-decision_di" bpmnElement="gw-approval-decision" isMarkerVisible="true">
+        <dc:Bounds x="650" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-rejected_di" bpmnElement="end-rejected">
+        <dc:Bounds x="807" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-already-done_di" bpmnElement="gw-already-done" isMarkerVisible="true">
+        <dc:Bounds x="950" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-credit-points_di" bpmnElement="task-credit-points">
+        <dc:Bounds x="1075" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-points-credited_di" bpmnElement="end-points-credited">
+        <dc:Bounds x="1257" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-complete-chore_di" bpmnElement="task-complete-chore">
+        <dc:Bounds x="1075" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-notify-parents-completed_di" bpmnElement="task-notify-parents-completed">
+        <dc:Bounds x="1225" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow-start-add_di" bpmnElement="flow-start-add">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-add-notify_di" bpmnElement="flow-add-notify">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-notify-review_di" bpmnElement="flow-notify-review">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="475" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-review-decision_di" bpmnElement="flow-review-decision">
+        <di:waypoint x="575" y="70" />
+        <di:waypoint x="650" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-rejected_di" bpmnElement="flow-rejected">
+        <di:waypoint x="700" y="70" />
+        <di:waypoint x="807" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-approved_di" bpmnElement="flow-approved">
+        <di:waypoint x="675" y="95" />
+        <di:waypoint x="675" y="140" />
+        <di:waypoint x="975" y="140" />
+        <di:waypoint x="975" y="95" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-done-yes_di" bpmnElement="flow-done-yes">
+        <di:waypoint x="1000" y="70" />
+        <di:waypoint x="1075" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-done-no_di" bpmnElement="flow-done-no">
+        <di:waypoint x="975" y="95" />
+        <di:waypoint x="975" y="210" />
+        <di:waypoint x="1075" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-credit-end_di" bpmnElement="flow-credit-end">
+        <di:waypoint x="1175" y="70" />
+        <di:waypoint x="1257" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-complete-notify_di" bpmnElement="flow-complete-notify">
+        <di:waypoint x="1175" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-notify-credit_di" bpmnElement="flow-notify-credit">
+        <di:waypoint x="1275" y="250" />
+        <di:waypoint x="1275" y="280" />
+        <di:waypoint x="1125" y="280" />
+        <di:waypoint x="1125" y="110" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

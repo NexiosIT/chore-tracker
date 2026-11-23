@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ie="https://rp-flow.dev/schema/bpmn/ie/1.0" id="definitions-cash-in" targetNamespace="https://rp-flow.dev/flows">
+  <bpmn:process id="process-cash-in" name="Cash-in" isExecutable="false">
+    <bpmn:laneSet id="lanes">
+      <bpmn:lane id="lane-kid" name="Kid">
+        <bpmn:flowNodeRef>start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-request-cash-in</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-parent" name="Parent">
+        <bpmn:flowNodeRef>task-give-reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-mark-granted</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane-system" name="Chore Tracker">
+        <bpmn:flowNodeRef>task-check-balance</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw-enough-points</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-refuse-request</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-refused</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-notify-parents-cash-in</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task-deduct-points</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end-granted</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start" name="Kid wants a reward">
+      <bpmn:outgoing>flow-start-request</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task-request-cash-in" name="Request cash-in for pocket money or screen time" ie:domains="rewards">
+      <bpmn:incoming>flow-start-request</bpmn:incoming>
+      <bpmn:outgoing>flow-request-check</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task-check-balance" name="Check points balance" ie:domains="rewards">
+      <bpmn:incoming>flow-request-check</bpmn:incoming>
+      <bpmn:outgoing>flow-check-gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gw-enough-points" name="Enough points?">
+      <bpmn:incoming>flow-check-gateway</bpmn:incoming>
+      <bpmn:outgoing>flow-not-enough</bpmn:outgoing>
+      <bpmn:outgoing>flow-enough</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task-refuse-request" name="Refuse cash-in request" ie:domains="rewards">
+      <bpmn:incoming>flow-not-enough</bpmn:incoming>
+      <bpmn:outgoing>flow-refuse-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task-notify-parents-cash-in" name="Notify parents of cash-in request" ie:domains="notifications">
+      <bpmn:incoming>flow-enough</bpmn:incoming>
+      <bpmn:outgoing>flow-notify-give</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task-give-reward" name="Give pocket money or screen time" ie:domains="rewards">
+      <bpmn:incoming>flow-notify-give</bpmn:incoming>
+      <bpmn:outgoing>flow-give-mark</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task-mark-granted" name="Mark cash-in as granted" ie:domains="rewards">
+      <bpmn:incoming>flow-give-mark</bpmn:incoming>
+      <bpmn:outgoing>flow-mark-deduct</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task-deduct-points" name="Deduct points at the current exchange rate" ie:domains="rewards">
+      <bpmn:incoming>flow-mark-deduct</bpmn:incoming>
+      <bpmn:outgoing>flow-deduct-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end-granted" name="Reward granted, points deducted">
+      <bpmn:incoming>flow-deduct-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end-refused" name="Cash-in refused">
+      <bpmn:incoming>flow-refuse-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow-start-request" sourceRef="start" targetRef="task-request-cash-in" />
+    <bpmn:sequenceFlow id="flow-request-check" sourceRef="task-request-cash-in" targetRef="task-check-balance" />
+    <bpmn:sequenceFlow id="flow-check-gateway" sourceRef="task-check-balance" targetRef="gw-enough-points" />
+    <bpmn:sequenceFlow id="flow-not-enough" name="No" sourceRef="gw-enough-points" targetRef="task-refuse-request" />
+    <bpmn:sequenceFlow id="flow-refuse-end" sourceRef="task-refuse-request" targetRef="end-refused" />
+    <bpmn:sequenceFlow id="flow-enough" name="Yes" sourceRef="gw-enough-points" targetRef="task-notify-parents-cash-in" />
+    <bpmn:sequenceFlow id="flow-notify-give" sourceRef="task-notify-parents-cash-in" targetRef="task-give-reward" />
+    <bpmn:sequenceFlow id="flow-give-mark" sourceRef="task-give-reward" targetRef="task-mark-granted" />
+    <bpmn:sequenceFlow id="flow-mark-deduct" sourceRef="task-mark-granted" targetRef="task-deduct-points" />
+    <bpmn:sequenceFlow id="flow-deduct-end" sourceRef="task-deduct-points" targetRef="end-granted" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_process-cash-in">
+    <bpmndi:BPMNPlane id="BPMNPlane_process-cash-in" bpmnElement="process-cash-in">
+      <bpmndi:BPMNShape id="start_di" bpmnElement="start">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-request-cash-in_di" bpmnElement="task-request-cash-in">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-check-balance_di" bpmnElement="task-check-balance">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw-enough-points_di" bpmnElement="gw-enough-points" isMarkerVisible="true">
+        <dc:Bounds x="500" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-refuse-request_di" bpmnElement="task-refuse-request">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-refused_di" bpmnElement="end-refused">
+        <dc:Bounds x="807" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-notify-parents-cash-in_di" bpmnElement="task-notify-parents-cash-in">
+        <dc:Bounds x="625" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-give-reward_di" bpmnElement="task-give-reward">
+        <dc:Bounds x="775" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-mark-granted_di" bpmnElement="task-mark-granted">
+        <dc:Bounds x="925" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task-deduct-points_di" bpmnElement="task-deduct-points">
+        <dc:Bounds x="1075" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end-granted_di" bpmnElement="end-granted">
+        <dc:Bounds x="1257" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow-start-request_di" bpmnElement="flow-start-request">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-request-check_di" bpmnElement="flow-request-check">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-check-gateway_di" bpmnElement="flow-check-gateway">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="500" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-not-enough_di" bpmnElement="flow-not-enough">
+        <di:waypoint x="550" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-enough_di" bpmnElement="flow-enough">
+        <di:waypoint x="525" y="95" />
+        <di:waypoint x="525" y="210" />
+        <di:waypoint x="625" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-refuse-end_di" bpmnElement="flow-refuse-end">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="807" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-notify-give_di" bpmnElement="flow-notify-give">
+        <di:waypoint x="725" y="210" />
+        <di:waypoint x="775" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-give-mark_di" bpmnElement="flow-give-mark">
+        <di:waypoint x="875" y="210" />
+        <di:waypoint x="925" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-mark-deduct_di" bpmnElement="flow-mark-deduct">
+        <di:waypoint x="1025" y="210" />
+        <di:waypoint x="1075" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow-deduct-end_di" bpmnElement="flow-deduct-end">
+        <di:waypoint x="1175" y="210" />
+        <di:waypoint x="1257" y="210" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

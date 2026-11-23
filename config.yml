@@ -21,8 +21,8 @@ imp_branch_prefix: imp/
 bug_report_branch_prefix: bug-reports/
 apps:
   - id: chore-tracker
-    display_name: Chore Tracker Web App
-    type: web
+    display_name: Chore Tracker Android App
+    type: mobile
 naming:
   use_case_prefix: UC
   feature_prefix: FT
@@ -66,7 +66,7 @@ automation:
   auto_archive_after_days: 14
 standards_categories:
   - api
-  - nextjs
+  - flutter
   - spring-boot
   - general
   - nfr

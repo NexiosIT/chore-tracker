@@ -75,19 +75,6 @@ standards:
     applies_to:
       service_types: []
       domains: []
-  - id: STD-004
-    name: Component Structure
-    category: nextjs
-    path: standards/nextjs/component-structure.md
-    description: Component organization, categorization, and composition rules for frontend services
-    status: active
-    version: 1.0.0
-    discovery_layer: manual
-    last_reviewed: '2026-04-06'
-    applies_to:
-      service_types:
-        - frontend
-      domains: []
   - id: STD-005
     name: Performance Budgets
     category: nfr
@@ -151,58 +138,6 @@ standards:
     applies_to:
       service_types:
         - backend
-      domains: []
-  - id: STD-010
-    name: API Client & React Query Hooks
-    category: nextjs
-    path: standards/nextjs/STD-010-api-client-hooks.md
-    description: API client with snake_case conversion, mutation hooks with fieldErrors, query hooks with staleTime, search hooks with debounce
-    status: active
-    version: 1.0.0
-    discovery_layer: manual
-    last_reviewed: '2026-04-07'
-    applies_to:
-      service_types:
-        - frontend
-      domains: []
-  - id: STD-011
-    name: Form State & Validation Patterns
-    category: nextjs
-    path: standards/nextjs/STD-011-form-patterns.md
-    description: Form state management, FieldError validation, submission flow, FormField wrapper with accessibility
-    status: active
-    version: 1.1.0
-    discovery_layer: manual
-    last_reviewed: '2026-07-18'
-    applies_to:
-      service_types:
-        - frontend
-      domains: []
-  - id: STD-012
-    name: Component Composition Patterns
-    category: nextjs
-    path: standards/nextjs/STD-012-component-patterns.md
-    description: Shared UI (forwardRef + typed variants), feature orchestrators, dialog/modal, combobox, toast, and config-driven components; styling mechanism is design-system-owned
-    status: active
-    version: 1.1.0
-    discovery_layer: manual
-    last_reviewed: '2026-07-18'
-    applies_to:
-      service_types:
-        - frontend
-      domains: []
-  - id: STD-013
-    name: Page & Routing Structure
-    category: nextjs
-    path: standards/nextjs/STD-013-page-structure.md
-    description: Next.js App Router page conventions, file organization by domain, responsive table/dialog patterns
-    status: active
-    version: 1.1.0
-    discovery_layer: manual
-    last_reviewed: '2026-07-18'
-    applies_to:
-      service_types:
-        - frontend
       domains: []
   - id: STD-014
     name: TDD Discipline
@@ -296,7 +231,7 @@ standards:
     category: spring-boot
     path: standards/spring-boot/STD-021-event-publisher.md
     description: Publishing async events from a contract.asyncapi.yml send operation — broker-agnostic publisher port, Spring Kafka adapter, CloudEvents envelope, partition key, transactional outbox for at-least-once delivery
-    status: active
+    status: deprecated
     version: 1.0.0
     discovery_layer: manual
     last_reviewed: '2026-05-29'
@@ -309,7 +244,7 @@ standards:
     category: spring-boot
     path: standards/spring-boot/STD-022-event-consumer.md
     description: Consuming async events for a contract.asyncapi.yml receive operation — @KafkaListener, idempotent handling, schema validation against the payload, retry + dead-letter topic, ordering by partition key
-    status: active
+    status: deprecated
     version: 1.0.0
     discovery_layer: manual
     last_reviewed: '2026-05-29'
@@ -349,7 +284,7 @@ standards:
     category: api
     path: standards/api/STD-031-graphql-conformance.md
     description: GraphQL conformance uses the native {data, errors} envelope, camelCase wire — STD-024's envelope unwrap + casing projection do NOT apply. Every Query/Mutation root field covered by an integration test; stable machine code at errors[].extensions.code; deliberate nullability; intentional partial-data semantics; no subscriptions at P1. Universal checklist — per-stack realization is customer-authored
-    status: active
+    status: deprecated
     version: 1.0.0
     discovery_layer: manual
     last_reviewed: '2026-07-03'
@@ -382,4 +317,17 @@ standards:
     last_reviewed: '2026-07-26'
     applies_to:
       service_types: []
+      domains: []
+  - id: STD-043
+    name: Flutter App Foundations
+    category: flutter
+    path: standards/flutter/STD-043-flutter-app-foundations.md
+    description: Material 3 theming from the hub design system, feature-first lib/ layout per spec domain, one typed API client checked against contracts, local notifications plus background checks instead of a push service, minSdk 29, widget tests per screen
+    status: active
+    version: 0.1.0
+    discovery_layer: manual
+    last_reviewed: '2026-11-23'
+    applies_to:
+      service_types:
+        - frontend
       domains: []
