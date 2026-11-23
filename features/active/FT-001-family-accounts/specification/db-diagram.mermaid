@@ -1,0 +1,72 @@
+---
+config:
+  themeCSS: |
+    .relationshipLine { stroke: #8b949e !important; stroke-width: 2px !important; }
+    .marker path, .marker circle { stroke: #8b949e !important; }
+    g.node[id*="-entity-family_member-"] .outer-path path:last-child { stroke: #2da44e !important; stroke-width: 4px !important; }
+    g.node[id*="-entity-family_member-"] .row-rect-odd path:last-child, g.node[id*="-entity-family_member-"] .row-rect-even path:last-child { stroke: #2da44e !important; stroke-width: 3px !important; }
+    g.node[id*="-entity-login_lockout-"] .outer-path path:last-child { stroke: #2da44e !important; stroke-width: 4px !important; }
+    g.node[id*="-entity-login_lockout-"] .row-rect-odd path:last-child, g.node[id*="-entity-login_lockout-"] .row-rect-even path:last-child { stroke: #2da44e !important; stroke-width: 3px !important; }
+    g.node[id*="-entity-registration-"] .outer-path path:last-child { stroke: #2da44e !important; stroke-width: 4px !important; }
+    g.node[id*="-entity-registration-"] .row-rect-odd path:last-child, g.node[id*="-entity-registration-"] .row-rect-even path:last-child { stroke: #2da44e !important; stroke-width: 3px !important; }
+    g.node[id*="-entity-session-"] .outer-path path:last-child { stroke: #2da44e !important; stroke-width: 4px !important; }
+    g.node[id*="-entity-session-"] .row-rect-odd path:last-child, g.node[id*="-entity-session-"] .row-rect-even path:last-child { stroke: #2da44e !important; stroke-width: 3px !important; }
+    g.node[id*="-entity-session_end_record-"] .outer-path path:last-child { stroke: #2da44e !important; stroke-width: 4px !important; }
+    g.node[id*="-entity-session_end_record-"] .row-rect-odd path:last-child, g.node[id*="-entity-session_end_record-"] .row-rect-even path:last-child { stroke: #2da44e !important; stroke-width: 3px !important; }
+    g.node[id*="-entity-username_reservation-"] .outer-path path:last-child { stroke: #2da44e !important; stroke-width: 4px !important; }
+    g.node[id*="-entity-username_reservation-"] .row-rect-odd path:last-child, g.node[id*="-entity-username_reservation-"] .row-rect-even path:last-child { stroke: #2da44e !important; stroke-width: 3px !important; }
+---
+%% db-diagram · FT-001 family-accounts · drawn by the dba worker; do not hand-edit, re-run it
+%% feature: FT-001
+%% base: chore-tracker-api @ foundation/app-scaffold ab1aa0f · 0 migrations
+%% delta: UC-001, UC-003, UC-004, UC-006, UC-008, UC-009, UC-014
+erDiagram
+    family_member {
+        uuid id PK "NEW · UC-001 · NOT NULL · inferred"
+        varchar(20) username "NEW · UC-001 · NOT NULL · stored as typed · case-insensitive uniqueness held by username_reservation · inferred"
+        varchar(30) display_name "NEW · UC-001 · NOT NULL · inferred"
+        varchar(255) password_hash "NEW · UC-001 · NOT NULL · inferred"
+        varchar(10) role "NEW · UC-001 · NOT NULL · parent | kid · inferred"
+        varchar(12) status "NEW · UC-014 · NOT NULL · active | deactivated · inferred"
+        timestamptz created_at "NEW · UC-001 · NOT NULL · inferred"
+        timestamptz updated_at "NEW · UC-001 · NOT NULL · inferred"
+    }
+    login_lockout {
+        text username_key PK "NEW · UC-003 · NOT NULL · lower-cased submitted username · inferred"
+        integer failed_attempt_count "NEW · UC-003 · NOT NULL · inferred"
+        timestamptz locked_until "NEW · UC-003 · inferred"
+    }
+    registration {
+        uuid id PK "NEW · UC-006 · NOT NULL · inferred"
+        varchar(20) username "NEW · UC-006 · NOT NULL · stored as typed · reserved in username_reservation while pending · inferred"
+        varchar(30) display_name "NEW · UC-006 · NOT NULL · inferred"
+        varchar(255) password_hash "NEW · UC-006 · NOT NULL · inferred"
+        varchar(10) status "NEW · UC-006 · NOT NULL · pending | approved | rejected · inferred"
+        timestamptz requested_at "NEW · UC-006 · NOT NULL · inferred"
+        uuid decided_by_member_id FK "NEW · UC-008 · empty while pending · inferred"
+        timestamptz decided_at "NEW · UC-008 · empty while pending · inferred"
+        uuid created_member_id FK, UK "NEW · UC-008 · set on approval only · inferred"
+    }
+    session {
+        varchar(64) token_hash PK "NEW · UC-003 · NOT NULL · inferred"
+        uuid family_member_id FK "NEW · UC-003 · NOT NULL · inferred"
+        timestamptz created_at "NEW · UC-003 · NOT NULL · inferred"
+    }
+    session_end_record {
+        uuid id PK "NEW · UC-004 · NOT NULL · inferred"
+        uuid family_member_id FK "NEW · UC-004 · NOT NULL · inferred"
+        timestamptz started_at "NEW · UC-004 · NOT NULL · inferred"
+        timestamptz ended_at "NEW · UC-004 · NOT NULL · inferred"
+        varchar(20) reason "NEW · UC-004 · NOT NULL · logout | password-change | password-reset | deactivation · inferred"
+    }
+    username_reservation {
+        varchar(20) username_key PK "NEW · UC-001 · NOT NULL · lower-case username · inferred"
+        uuid family_member_id FK, UK "NEW · UC-001 · exactly one of family_member_id and registration_id set · inferred"
+        uuid registration_id FK, UK "NEW · UC-006 · exactly one of family_member_id and registration_id set · pending registrations only · inferred"
+    }
+    family_member ||--o| registration : "FK created_member_id"
+    family_member |o--o{ registration : "FK decided_by_member_id"
+    family_member ||--o{ session : "FK family_member_id"
+    family_member ||--o{ session_end_record : "FK family_member_id"
+    family_member ||--o| username_reservation : "FK family_member_id"
+    registration ||--o| username_reservation : "FK registration_id"

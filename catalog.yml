@@ -1,2 +1,234 @@
-last_id: 0
-use_cases: []
+last_id: 15
+use_cases:
+  - id: UC-001
+    name: found-family
+    slug: found-family
+    domain: family
+    path: specs/family/UC-001-found-family
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 77b65b8b622e2c335832bb0efbc3338170629c26db81146c403a2bf97849b935
+    contract_hashes:
+      FoundFamilyRequest: 51cc739a1a6b5c8d6893dc32ff120b3f2bb20db3b4148de27d77f02c4339968d
+      SessionStarted: 59defb650d00948b632d19a173a93e17f718e43eeb1a38e1006d8e53c5db4f64
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-002
+    name: get-family-status
+    slug: get-family-status
+    domain: family
+    path: specs/family/UC-002-get-family-status
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 1e55e81396b4ad019c97b854298aa3d98b6aa3b8a0d0e5090b3b19bc1d1fad27
+    contract_hashes:
+      FamilyStatus: 5a31d20f155e4690d7044a9c723b34f5d9a6709a95b8fbac46bef6b5fce68107
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-003
+    name: log-in
+    slug: log-in
+    domain: family
+    path: specs/family/UC-003-log-in
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: a892e62b429d8c29be14d3161e735a3a7fd5e1c7b186912869168fd923b34895
+    contract_hashes:
+      LogInRequest: 406a07da7ae7446f75eca7c1507ca562d307f5661fc8cc0acf6d854e860c42c4
+      SessionStarted: 59defb650d00948b632d19a173a93e17f718e43eeb1a38e1006d8e53c5db4f64
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-004
+    name: log-out
+    slug: log-out
+    domain: family
+    path: specs/family/UC-004-log-out
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 3a2417cfdd325d411a79b3499c743d00e700a4bd154bc92cd68a023306c9805f
+    contract_hashes:
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-005
+    name: get-current-member
+    slug: get-current-member
+    domain: family
+    path: specs/family/UC-005-get-current-member
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 37d120ea78ae97ccc1fac7fd00a655928ac4847b2e48aafe487226d23b5d829b
+    contract_hashes:
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-006
+    name: register-kid
+    slug: register-kid
+    domain: family
+    path: specs/family/UC-006-register-kid
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: e970808c3c3c561837515ce99b8f2994cb6bfa0d2b9b0107626e2663b936646d
+    contract_hashes:
+      RegisterKidRequest: aba95e42685d520259cca4d3fffd994c4c2914bf918cb264d4f76cc613420c5b
+      Registration: cafb8eefd83f54128d408bbe52b714c67033474e5a468feb9b7a15d7276f60d0
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-007
+    name: list-pending-registrations
+    slug: list-pending-registrations
+    domain: family
+    path: specs/family/UC-007-list-pending-registrations
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: c8b38c0717a3a2b7fb50b7196c3d44b0b59f3ff0489a09f2982f411dee9d0961
+    contract_hashes:
+      PendingRegistrations: a177821b615e6fab6708ef01e524bedd62da10e402297113c42e88f0275f8b62
+      Registration: cafb8eefd83f54128d408bbe52b714c67033474e5a468feb9b7a15d7276f60d0
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-008
+    name: approve-registration
+    slug: approve-registration
+    domain: family
+    path: specs/family/UC-008-approve-registration
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 585b64d6cd6d940a0e4d1c374268dcebf45ceb48b9ed89a94b67e6cc5244b887
+    contract_hashes:
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-009
+    name: reject-registration
+    slug: reject-registration
+    domain: family
+    path: specs/family/UC-009-reject-registration
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 4dacb822dd1f803befb39c80b5f6b4235b567cb82d050c2de2d6503af3568607
+    contract_hashes:
+      Registration: cafb8eefd83f54128d408bbe52b714c67033474e5a468feb9b7a15d7276f60d0
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-010
+    name: add-parent
+    slug: add-parent
+    domain: family
+    path: specs/family/UC-010-add-parent
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 5f16e630691704a4de41f04a4f1489a1f49093a7895535dd640abf653e1600ef
+    contract_hashes:
+      AddParentRequest: aba95e42685d520259cca4d3fffd994c4c2914bf918cb264d4f76cc613420c5b
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-011
+    name: change-own-password
+    slug: change-own-password
+    domain: family
+    path: specs/family/UC-011-change-own-password
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 77ba97be3c1e586f990a23dc9c1df68227bd51687543780e4bd801d080f6a703
+    contract_hashes:
+      ChangeOwnPasswordRequest: 6851701fd5d4953a7573e616c5aec384320b7ff76244287d8f0123a061dacea9
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-012
+    name: reset-member-password
+    slug: reset-member-password
+    domain: family
+    path: specs/family/UC-012-reset-member-password
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: f46671a84a2a27e67fcb55e4e5648f2c6171dc0c8b8dd8b752268d167d5187ec
+    contract_hashes:
+      ResetMemberPasswordRequest: bcdc591cd42525a0c8ee6996707a1b0d7ff5ce9777a82d1bd82af561587e3d3f
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-013
+    name: list-members
+    slug: list-members
+    domain: family
+    path: specs/family/UC-013-list-members
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 4019c8f2873f92aa145f5ecc90ae47a2b423b5aff72c73a4965da80d5e30c4f8
+    contract_hashes:
+      MemberList: 9c86eb1f3b4314564cfce4611668fcb1d708197b85ea8afd326353e283fa3f4f
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-014
+    name: deactivate-member
+    slug: deactivate-member
+    domain: family
+    path: specs/family/UC-014-deactivate-member
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 6578b41c410ab83a80330c66538fecb2e19c4f7928b46c62f58f5ceed0c02e1f
+    contract_hashes:
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-015
+    name: reactivate-member
+    slug: reactivate-member
+    domain: family
+    path: specs/family/UC-015-reactivate-member
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: 183c235a891fb4743c80028c4d560f8af3b1f8bfced8c6d04700a210ca45f0c9
+    contract_hashes:
+      Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
+      Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
+    dependencies:
+      calls: []
+      called_by: []

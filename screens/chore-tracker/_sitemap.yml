@@ -1,1 +1,17 @@
-routes: []
+routes:
+  - route: /setup
+    screen: SCR-001
+  - route: /login
+    screen: SCR-002
+  - route: /register
+    screen: SCR-003
+  - route: /home
+    screen: SCR-004
+  - route: /registrations/pending
+    screen: SCR-005
+  - route: /members
+    screen: SCR-006
+  - route: /members/add-parent
+    screen: SCR-007
+  - route: /account/password
+    screen: SCR-008

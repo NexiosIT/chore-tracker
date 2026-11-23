@@ -1,0 +1,172 @@
+id: FT-001
+name: Family Accounts
+slug: family-accounts
+status: specified
+owner: kbo-nexiosit
+sprint: ''
+credit_estimate: null
+description: Every family member gets their own username-and-password login, the first sign-up founds the family as a parent, kids self-register pending parent approval, and parents add parents, reset passwords and deactivate members.
+spec_changes:
+  - action: create
+    spec_id: UC-001
+    spec_ref: specs/family/UC-001-found-family
+    domain: family
+    summary: First sign-up on a fresh install creates the family and its first active parent, with the parent confirmation, and starts a session.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-002
+    spec_ref: specs/family/UC-002-get-family-status
+    domain: family
+    summary: Anonymous read telling the app whether a family exists, so it offers Setup or Login as the entry screen.
+    pattern_type: query-api-endpoint
+  - action: create
+    spec_id: UC-003
+    spec_ref: specs/family/UC-003-log-in
+    domain: family
+    summary: Log in with a case-insensitive username and password; specific messages for pending, rejected and deactivated accounts; 5-failure 15-minute lockout per submitted username.
+    pattern_type: authentication-session
+  - action: create
+    spec_id: UC-004
+    spec_ref: specs/family/UC-004-log-out
+    domain: family
+    summary: End the session used for the call.
+    pattern_type: authentication-session
+  - action: create
+    spec_id: UC-005
+    spec_ref: specs/family/UC-005-get-current-member
+    domain: family
+    summary: Return the member (display name, username, role) the session belongs to; an ended session is refused so the app shows Login.
+    pattern_type: query-api-endpoint
+  - action: create
+    spec_id: UC-006
+    spec_ref: specs/family/UC-006-register-kid
+    domain: family
+    summary: A kid creates a pending registration with username, display name and password; pending usernames are reserved; refused while no family exists.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-007
+    spec_ref: specs/family/UC-007-list-pending-registrations
+    domain: family
+    summary: Parent-only list of pending registrations, oldest first, with the count that drives the badge.
+    pattern_type: query-api-endpoint
+  - action: create
+    spec_id: UC-008
+    spec_ref: specs/family/UC-008-approve-registration
+    domain: family
+    summary: Parent approves a pending registration, creating an active kid from it.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-009
+    spec_ref: specs/family/UC-009-reject-registration
+    domain: family
+    summary: Parent rejects a pending registration; it is kept on record and its username freed.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-010
+    spec_ref: specs/family/UC-010-add-parent
+    domain: family
+    summary: Parent creates another parent account, active immediately.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-011
+    spec_ref: specs/family/UC-011-change-own-password
+    domain: family
+    summary: Member changes their own password with the current one; the session used stays and their other sessions end.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-012
+    spec_ref: specs/family/UC-012-reset-member-password
+    domain: family
+    summary: Parent sets a new password for another member, ending all their sessions and clearing their lockout.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-013
+    spec_ref: specs/family/UC-013-list-members
+    domain: family
+    summary: Parent-only list of every member with display name, username, role and status.
+    pattern_type: query-api-endpoint
+  - action: create
+    spec_id: UC-014
+    spec_ref: specs/family/UC-014-deactivate-member
+    domain: family
+    summary: Parent deactivates an active member, deleting nothing and ending all their sessions; the last active parent cannot be deactivated.
+    pattern_type: domain-logic-with-rules
+  - action: create
+    spec_id: UC-015
+    spec_ref: specs/family/UC-015-reactivate-member
+    domain: family
+    summary: Parent reactivates a deactivated member, who can log in again with their existing password.
+    pattern_type: domain-logic-with-rules
+screen_changes:
+  - action: create
+    screen_id: SCR-001
+    screen_ref: screens/chore-tracker/family/SCR-001-setup.yml
+    app: chore-tracker
+    summary: 'Found the family: username, display name, password and the parent confirmation; entry screen only while no family exists.'
+    pattern_type: form-screen
+  - action: create
+    screen_id: SCR-002
+    screen_ref: screens/chore-tracker/family/SCR-002-login.yml
+    app: chore-tracker
+    summary: Log in with username and password; link to kid registration; entry screen once the family exists.
+    pattern_type: form-screen
+  - action: create
+    screen_id: SCR-003
+    screen_ref: screens/chore-tracker/family/SCR-003-kid-registration.yml
+    app: chore-tracker
+    summary: Kid requests an account and is told a parent must approve it.
+    pattern_type: form-screen
+  - action: create
+    screen_id: SCR-004
+    screen_ref: screens/chore-tracker/family/SCR-004-home.yml
+    app: chore-tracker
+    summary: 'First screen after login: pending-registration badge and links for parents, change password and log out for everyone; role content comes later.'
+    pattern_type: app-shell-screen
+  - action: create
+    screen_id: SCR-005
+    screen_ref: screens/chore-tracker/family/SCR-005-pending-registrations.yml
+    app: chore-tracker
+    summary: Parent list of pending registrations, oldest first, with approve and reject.
+    pattern_type: list-with-actions-screen
+  - action: create
+    screen_id: SCR-006
+    screen_ref: screens/chore-tracker/family/SCR-006-members.yml
+    app: chore-tracker
+    summary: Parent list of all members with role and status; deactivate, reactivate and a reset-password dialog.
+    pattern_type: list-with-actions-screen
+  - action: create
+    screen_id: SCR-007
+    screen_ref: screens/chore-tracker/family/SCR-007-add-parent.yml
+    app: chore-tracker
+    summary: Parent creates another parent account.
+    pattern_type: form-screen
+  - action: create
+    screen_id: SCR-008
+    screen_ref: screens/chore-tracker/family/SCR-008-change-password.yml
+    app: chore-tracker
+    summary: Member changes their own password with the current one.
+    pattern_type: form-screen
+created_at: '2026-11-23T13:17:52.370Z'
+dependencies:
+  features: []
+  external_systems: []
+scope_boundaries:
+  out_of_scope:
+    - Notifying parents of pending registrations — deferred to theme T-06; parents see the pending list and badge instead.
+    - Parents registering themselves — an existing parent creates further parent accounts directly (decision 3).
+    - Email-based or self-service forgotten-password recovery — the app stores no email addresses; a parent resets passwords.
+    - Session expiry or idle timeout — sessions last until logout or until a password change, reset or deactivation ends them.
+    - Deleting family members — parents deactivate and reactivate; no data is removed.
+    - What deactivation means for chores, leaderboard places and redemptions — decided by themes T-01, T-02 and T-03.
+    - Home view content per role — defined by later features.
+    - Multiple families — the system serves a single family.
+risk_tier: elevated
+risk_tier_basis:
+  - 'unresolved registry entity: ''session'' (bound by UC-001) does not resolve in the domain registry'
+  - 'unresolved registry entity: ''login-lockout'' (bound by UC-003) does not resolve in the domain registry'
+  - 'unresolved registry entity: ''session-end-record'' (bound by UC-004) does not resolve in the domain registry'
+risk_answers:
+  ddl_privilege: 'yes'
+  authz_session: 'yes'
+  tenant_boundary: 'no'
+  sensitive_data: 'yes'
