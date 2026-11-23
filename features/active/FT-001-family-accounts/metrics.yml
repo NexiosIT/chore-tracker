@@ -9,5 +9,140 @@ stage_history:
     cli_version: 1.7.0
     model: claude-opus-5-5
 gates: {}
-reviews: []
+reviews:
+  - subject: UC-001
+    verdict: revise
+    findings:
+      critical: 1
+      important: 3
+      minor: 3
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-002
+    verdict: revise
+    findings:
+      critical: 1
+      important: 1
+      minor: 3
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-003
+    verdict: revise
+    findings:
+      critical: 2
+      important: 5
+      minor: 1
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-004
+    verdict: revise
+    findings:
+      critical: 1
+      important: 3
+      minor: 2
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-005
+    verdict: revise
+    findings:
+      critical: 1
+      important: 1
+      minor: 4
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-006
+    verdict: revise
+    findings:
+      critical: 1
+      important: 2
+      minor: 2
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-007
+    verdict: revise
+    findings:
+      critical: 1
+      important: 0
+      minor: 3
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-008
+    verdict: revise
+    findings:
+      critical: 1
+      important: 0
+      minor: 4
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-009
+    verdict: revise
+    findings:
+      critical: 1
+      important: 2
+      minor: 4
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-010
+    verdict: revise
+    findings:
+      critical: 1
+      important: 4
+      minor: 1
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-011
+    verdict: revise
+    findings:
+      critical: 1
+      important: 6
+      minor: 2
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-012
+    verdict: revise
+    findings:
+      critical: 1
+      important: 4
+      minor: 4
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-013
+    verdict: revise
+    findings:
+      critical: 1
+      important: 1
+      minor: 1
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-014
+    verdict: revise
+    findings:
+      critical: 2
+      important: 4
+      minor: 4
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
+  - subject: UC-015
+    verdict: revise
+    findings:
+      critical: 1
+      important: 1
+      minor: 3
+    source: agent
+    cli_version: 1.7.0
+    model: claude-opus-5-5
 generation: {}
