@@ -1,0 +1,32 @@
+id: UC-011
+name: change-own-password
+slug: change-own-password
+domain: family
+service: chore-tracker-api
+actor: Logged-in family member (parent or kid)
+goal: As a family member, I want to change my own password by giving my current one, so that I control my own login without asking a parent.
+preconditions:
+  - The caller is logged in with a session that has not ended.
+postconditions:
+  - The member's password is replaced by the new password's hash.
+  - The session used for the change is kept.
+  - All other sessions of the member are ended.
+  - Each ended session is removed and a session end record is written with the member, the session's start time, the end time and reason password-change.
+status: draft
+version: 1.0.0
+priority: P1
+related_screens:
+  - SCR-008
+related_specs:
+  - UC-003
+  - UC-012
+dependencies:
+  calls: []
+  called_by: []
+spec_hash: ''
+contract_hashes: {}
+endpoint: PUT /api/members/me/password
+entities:
+  - family-member
+  - session
+  - session-end-record

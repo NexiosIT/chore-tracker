@@ -1,0 +1,31 @@
+id: UC-013
+name: list-members
+slug: list-members
+domain: family
+service: chore-tracker-api
+actor: Parent
+goal: As a parent, I want to see every family member with their role and status, so that I can manage who uses the family space.
+preconditions:
+  - The caller is logged in as an active parent.
+postconditions:
+  - The response returns every family member, active and deactivated, with id, display name, username, role and status.
+  - Parents come first, then kids, each ordered by display name and then username.
+  - Nothing is changed.
+status: draft
+version: 1.0.0
+priority: P1
+related_screens:
+  - SCR-006
+related_specs:
+  - UC-010
+  - UC-012
+  - UC-014
+  - UC-015
+dependencies:
+  calls: []
+  called_by: []
+spec_hash: ''
+contract_hashes: {}
+endpoint: GET /api/members
+entities:
+  - family-member

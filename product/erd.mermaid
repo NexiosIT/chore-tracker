@@ -3,11 +3,58 @@ erDiagram
     chore
     chore_template
     exchange_rate
-    family_member
+    family_member {
+        uuid id PK "NOT NULL"
+        varchar(20) username "NOT NULL · stored as typed · case-insensitive uniqueness held by username_reservation"
+        varchar(30) display_name "NOT NULL"
+        varchar(255) password_hash "NOT NULL"
+        varchar(10) role "NOT NULL · parent | kid"
+        varchar(12) status "NOT NULL · active | deactivated"
+        timestamptz created_at "NOT NULL"
+        timestamptz updated_at "NOT NULL"
+    }
+    login_lockout {
+        text username_key PK "NOT NULL · lower-cased submitted username"
+        integer failed_attempt_count "NOT NULL"
+        timestamptz locked_until
+    }
     notification
     points_entry
     redemption
-    registration
+    registration {
+        uuid id PK "NOT NULL"
+        varchar(20) username "NOT NULL · stored as typed · reserved in username_reservation while pending"
+        varchar(30) display_name "NOT NULL"
+        varchar(255) password_hash "NOT NULL"
+        varchar(10) status "NOT NULL · pending | approved | rejected"
+        timestamptz requested_at "NOT NULL"
+        uuid decided_by_member_id FK "empty while pending"
+        timestamptz decided_at "empty while pending"
+        uuid created_member_id FK, UK "set on approval only"
+    }
+    session {
+        varchar(64) token_hash PK "NOT NULL"
+        uuid family_member_id FK "NOT NULL"
+        timestamptz created_at "NOT NULL"
+    }
+    session_end_record {
+        uuid id PK "NOT NULL"
+        uuid family_member_id FK "NOT NULL"
+        timestamptz started_at "NOT NULL"
+        timestamptz ended_at "NOT NULL"
+        varchar(20) reason "NOT NULL · logout | password-change | password-reset | deactivation"
+    }
+    username_reservation {
+        varchar(20) username_key PK "NOT NULL · lower-case username"
+        uuid family_member_id FK, UK "exactly one of family_member_id and registration_id set"
+        uuid registration_id FK, UK "exactly one of family_member_id and registration_id set · pending registrations only"
+    }
+    family_member |o--o{ registration : "FK decided_by_member_id"
+    family_member ||--o{ session : "FK family_member_id"
+    family_member ||--o{ session_end_record : "FK family_member_id"
+    family_member ||--o| registration : "FK created_member_id"
+    family_member ||--o| username_reservation : "FK family_member_id"
+    registration ||--o| username_reservation : "FK registration_id"
     classDef built stroke:#bf8700,stroke-width:3px
     classDef delivered stroke:#57606a
     classDef external stroke:#0969da
@@ -15,8 +62,12 @@ erDiagram
     class chore planned
     class chore_template planned
     class exchange_rate planned
-    class family_member planned
+    class family_member built
+    class login_lockout built
     class notification planned
     class points_entry planned
     class redemption planned
-    class registration planned
+    class registration built
+    class session built
+    class session_end_record built
+    class username_reservation built

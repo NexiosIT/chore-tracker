@@ -1,2 +1,197 @@
-last_id: 0
-use_cases: []
+last_id: 15
+use_cases:
+  - id: UC-001
+    name: found-family
+    slug: found-family
+    domain: family
+    path: specs/family/UC-001-found-family
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-002
+    name: get-family-status
+    slug: get-family-status
+    domain: family
+    path: specs/family/UC-002-get-family-status
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-003
+    name: log-in
+    slug: log-in
+    domain: family
+    path: specs/family/UC-003-log-in
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-004
+    name: log-out
+    slug: log-out
+    domain: family
+    path: specs/family/UC-004-log-out
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-005
+    name: get-current-member
+    slug: get-current-member
+    domain: family
+    path: specs/family/UC-005-get-current-member
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-006
+    name: register-kid
+    slug: register-kid
+    domain: family
+    path: specs/family/UC-006-register-kid
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-007
+    name: list-pending-registrations
+    slug: list-pending-registrations
+    domain: family
+    path: specs/family/UC-007-list-pending-registrations
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-008
+    name: approve-registration
+    slug: approve-registration
+    domain: family
+    path: specs/family/UC-008-approve-registration
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-009
+    name: reject-registration
+    slug: reject-registration
+    domain: family
+    path: specs/family/UC-009-reject-registration
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-010
+    name: add-parent
+    slug: add-parent
+    domain: family
+    path: specs/family/UC-010-add-parent
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-011
+    name: change-own-password
+    slug: change-own-password
+    domain: family
+    path: specs/family/UC-011-change-own-password
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-012
+    name: reset-member-password
+    slug: reset-member-password
+    domain: family
+    path: specs/family/UC-012-reset-member-password
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-013
+    name: list-members
+    slug: list-members
+    domain: family
+    path: specs/family/UC-013-list-members
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-014
+    name: deactivate-member
+    slug: deactivate-member
+    domain: family
+    path: specs/family/UC-014-deactivate-member
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
+  - id: UC-015
+    name: reactivate-member
+    slug: reactivate-member
+    domain: family
+    path: specs/family/UC-015-reactivate-member
+    status: draft
+    priority: P1
+    version: 1.0.0
+    spec_hash: ""
+    contract_hashes: {}
+    dependencies:
+      calls: []
+      called_by: []
