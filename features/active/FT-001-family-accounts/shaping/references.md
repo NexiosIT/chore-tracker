@@ -14,7 +14,7 @@
 - `screens/chore-tracker/family/` — the 8 screen specs SCR-001 to SCR-008 authored by this feature
 - `screens/chore-tracker/_sitemap.yml` — routes of the 8 screens
 - `design-system/_base/` and `design-system/chore-tracker/` — tokens and components the screens bind to
-- `standards/api/error-handling.md` — STD-002; needs a rate-limit category for the 429 lockout answer of UC-003
+- `standards/api/error-handling.md` — STD-002; its `rate_limit` category (1.2.0) covers the 429 lockout answer of UC-003
 - `standards/api/response-envelope.md` — STD-001; envelope applied to every contract
 - `standards/api/STD-024-contract-conformance.md` — STD-024; shared schemas defined identically across contracts
 - `config/readiness-rubric.yml` — readiness rubric the specs are scored against

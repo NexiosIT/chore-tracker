@@ -2,7 +2,7 @@ flowchart TD
     A[Login with username and password] --> V{Both given?}
     V -- no --> E400[400 VALIDATION_FAILED, count unchanged]
     V -- yes --> L{Username locked now?}
-    L -- yes --> E429[429 AUTHENTICATION_LOCKED_OUT with retryAt]
+    L -- yes --> E429[429 RATE_LIMIT_LOGIN_LOCKED with retryAt]
     L -- no --> M{Member with this username, any case?}
     M -- yes --> MP{Password matches?}
     MP -- no --> F[Add one to the failed-attempt count]

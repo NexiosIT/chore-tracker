@@ -106,7 +106,7 @@ components:
         retryAt:
           type: string
           format: date-time
-          description: When a locked-out username may try again (only with code AUTHENTICATION_LOCKED_OUT).
+          description: When a locked-out username may try again (only with code RATE_LIMIT_LOGIN_LOCKED).
           example: "2026-11-23T14:32:00Z"
         details:
           type: array

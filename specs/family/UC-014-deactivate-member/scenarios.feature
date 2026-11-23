@@ -31,6 +31,13 @@ Feature: Deactivate a member
     And the other gets response status 422 with error code "BUSINESS_LAST_ACTIVE_PARENT"
     And exactly one active parent remains
 
+  @edge-case
+  Scenario: Concurrent login and deactivation leave no live session
+    When "Jip_2015" logs in with his correct password and the app deactivates member "4e2a9c7b-1d5f-4b3a-8c6e-9a0b2d4f6e81" with token "sanne-token-1" at the same moment
+    Then the deactivation gets response status 200
+    And the login gets either response status 201 or response status 403 with error code "AUTHORIZATION_ACCOUNT_DEACTIVATED"
+    And "Jip_2015" has no session afterwards, so any token the login returned gets 401 "AUTHENTICATION_REQUIRED"
+
   @error
   Scenario: Deactivating the last active parent is rejected
     Given "Joris_V" is deactivated

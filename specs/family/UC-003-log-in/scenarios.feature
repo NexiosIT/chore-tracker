@@ -89,17 +89,19 @@ Feature: Log in
     Given the username "Sanne_V" has 4 failed attempts
     And the time is 14:17 on 23 November 2026
     When someone logs in with username "Sanne_V" and password "verkeerd123"
-    Then the response status is 429 with error code "AUTHENTICATION_LOCKED_OUT"
+    Then the response status is 429 with error code "RATE_LIMIT_LOGIN_LOCKED"
     And the error message is "Too many failed attempts. Try again later."
     And the error has retryAt "2026-11-23T14:32:00Z"
+    And the Retry-After header asks the client to wait 15 minutes
 
   @error
   Scenario: A locked username is rejected even with the right password
     Given the username "Sanne_V" was locked at 14:17 on 23 November 2026
     And the time is 14:25 on 23 November 2026
     When someone logs in with username "sanne_v" and password "zonnebloem42"
-    Then the response status is 429 with error code "AUTHENTICATION_LOCKED_OUT"
+    Then the response status is 429 with error code "RATE_LIMIT_LOGIN_LOCKED"
     And the error has retryAt "2026-11-23T14:32:00Z"
+    And the Retry-After header asks the client to wait 7 minutes
     And no session is started
 
 
