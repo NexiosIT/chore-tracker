@@ -1,0 +1,78 @@
+# .ie/bootstrap-trace.yml — Phase 0a bootstrap decision log
+format_version: "1.0"
+hub: "Chore Tracker"
+agent_runtime: "claude-code"
+model: "claude-opus-5-5"
+started_at: "2026-11-23T10:09:52Z"
+completed_at: null
+entries:
+  - id: BST-001
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: user_decision
+    actor: user
+    subject: "Product scope: single family vs multi-family"
+    artifact_affected: product/mission.md
+    decision: "Single family only (the engineer's own household); multi-family is out of scope for now"
+    reasoning: "Engineer stated the app is 'for the moment only for my family'"
+    risk: high
+  - id: BST-002
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: user_decision
+    actor: user
+    subject: "Points crediting and approval flow"
+    artifact_affected: product/mission.md
+    decision: "Parent-created chores credit points automatically on completion; kid-created chores (including ad-hoc chores already done) require parent approval before points count"
+    reasoning: "Engineer resolved an apparent conflict between 'parents approve' and 'points auto added' by distinguishing who created the chore"
+    risk: high
+  - id: BST-003
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: user_decision
+    actor: user
+    subject: "Points exchange rate ownership"
+    artifact_affected: product/mission.md
+    decision: "Parents set the exchange rate between points and pocket money / screen time"
+    reasoning: "Stated directly by the engineer"
+    risk: medium
+  - id: BST-004
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: suggestion
+    actor: agent
+    subject: "Success metrics"
+    artifact_affected: product/mission.md
+    decision: "Weekly streaks; parent approval within 24 hours; points actually redeemed"
+    reasoning: "Engineer described features rather than metrics; agent offered four candidate metrics and the engineer picked three (on-time completion rate not chosen)"
+    risk: medium
+  - id: BST-005
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: interpretation
+    actor: agent
+    subject: "Mission wording for kid-added chores"
+    artifact_affected: product/mission.md
+    decision: "Changed 'approved before the work starts' to 'approved before any points count', covering ad-hoc chores already done"
+    reasoning: "Roadmap theme input said a kid may add or complete a random chore and a parent then approves it, so approval cannot be limited to before the work starts"
+    risk: medium
+  - id: BST-006
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: interpretation
+    actor: agent
+    subject: "Theme wording"
+    artifact_affected: product/roadmap.md
+    decision: "Rewrote the engineer's six feature-level themes (timers/ad-hoc chores, rewards, reporting, authentication, calendar, notifications) as outcome-shaped titles T-01..T-06, keeping the engineer's ordering"
+    reasoning: "Roadmap template requires outcome themes, not features; content of each theme body is taken from the engineer's description"
+    risk: low
+  - id: BST-007
+    step: 1
+    step_name: "Mission & Roadmap"
+    type: suggestion
+    actor: agent
+    subject: "Theme horizons"
+    artifact_affected: product/roadmap.md
+    decision: "T-01, T-02, T-04 this-quarter; T-05, T-06 next-quarter; T-03 later"
+    reasoning: "Engineer gave no horizons; agent sequenced the core chore loop, rewards and logins first, then planning and notifications, then reporting. Engineer accepted."
+    risk: low

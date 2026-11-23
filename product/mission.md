@@ -2,7 +2,7 @@
 
 ## Vision
 
-Chore Tracker is a family app where kids complete chores, earn points, and swap those points for pocket money or screen time. Parents create chores, often from reusable templates with fixed points, and can put a timer on them. Kids can also propose chores of their own, which a parent approves before the work starts. Points are credited automatically as soon as an approved chore is completed. A weekly leaderboard and streaks make chores feel like a game rather than a negotiation.
+Chore Tracker is a family app where kids complete chores, earn points, and swap those points for pocket money or screen time. Parents create chores, often from reusable templates with fixed points, and can put a timer on them. Kids can also add chores of their own, including ad-hoc chores they have already done, and a parent approves those before any points count. Points for parent-created chores are credited automatically the moment they are completed. A weekly leaderboard and streaks make chores feel like a game rather than a negotiation.
 
 ## Problem Statement
 
