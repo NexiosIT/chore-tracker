@@ -19,7 +19,14 @@ contexts:
       family-member:
         definition: "A parent or kid in the family, with their own username and password login."
       registration:
-        definition: "A kid's sign-up request that stays pending until a parent approves it."
+        definition: "A kid's sign-up request that stays pending until a parent approves or rejects it; rejected registrations are kept on record."
+      session:
+        definition: "A family member's logged-in state on one device; it lasts until logout or until a password change, a password reset or a deactivation ends it."
+      login-lockout:
+        definition: "The count of consecutive failed login attempts for one submitted username, and the 15-minute lockout that 5 failures start; it exists for usernames that match no member too."
+        aliases: ["failed-login-count"]
+      session-end-record:
+        definition: "An audit record of one ended session: which member it belonged to, when it started and ended, and why it ended (logout, password change, password reset or deactivation)."
   chores:
     entities:
       chore:
