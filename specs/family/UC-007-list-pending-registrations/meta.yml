@@ -24,7 +24,7 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: c8b38c0717a3a2b7fb50b7196c3d44b0b59f3ff0489a09f2982f411dee9d0961
+spec_hash: 82e31f7f563be991bec8e4ff74dabad8113907196368f1f5b7d3be4c2892128c
 contract_hashes:
   PendingRegistrations: a177821b615e6fab6708ef01e524bedd62da10e402297113c42e88f0275f8b62
   Registration: cafb8eefd83f54128d408bbe52b714c67033474e5a468feb9b7a15d7276f60d0

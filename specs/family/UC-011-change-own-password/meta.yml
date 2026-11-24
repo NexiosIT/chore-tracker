@@ -23,7 +23,7 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: 77ba97be3c1e586f990a23dc9c1df68227bd51687543780e4bd801d080f6a703
+spec_hash: 2f5628581337ee0619acb02d2e79cee3f31b766e017fe448182b74ee6b5b306d
 contract_hashes:
   ChangeOwnPasswordRequest: 6851701fd5d4953a7573e616c5aec384320b7ff76244287d8f0123a061dacea9
   Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44

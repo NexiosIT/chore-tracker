@@ -26,7 +26,7 @@ related_specs:
 dependencies:
   calls: []
   called_by: []
-spec_hash: 585b64d6cd6d940a0e4d1c374268dcebf45ceb48b9ed89a94b67e6cc5244b887
+spec_hash: a667ab84ef6af1f720eec209d9dc2ba0c48ae6e1842db170c50b36271febe32d
 contract_hashes:
   Member: 575d8cd3695658f2609cfb651651a3543298ef907aa5ba3b1a3b7bc092dab01d
   Error: a3b97a5bfa4d8d9c2910984b630f3bb5252903dbd3ce13dedbdbba7b3424bc44
