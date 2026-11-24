@@ -3,7 +3,7 @@
 ## Security
 
 - The new password is stored only as a salted, slow one-way hash and is never logged or returned.
-- The password replacement, the ending of the target's sessions and the clearing of the lockout happen in one transaction.
+- The password replacement, the ending of the target's sessions, the writing of their session end records and the clearing of the lockout happen in one transaction. The member's row is updated before the sessions are removed. That takes the row lock a login (UC-003) reads under, so a login with the old password either finishes first and its session is removed, or waits and fails with the new password in place.
 
 ## Business Rules
 

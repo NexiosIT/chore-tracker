@@ -55,9 +55,9 @@ standards:
     path: standards/api/error-handling.md
     description: Error classification, propagation, and logging conventions for all backend services
     status: active
-    version: 1.1.0
+    version: 1.2.0
     discovery_layer: manual
-    last_reviewed: '2026-07-18'
+    last_reviewed: '2026-11-23'
     applies_to:
       service_types:
         - backend

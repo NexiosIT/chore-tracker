@@ -7,7 +7,7 @@ Checked top to bottom; the first matching row decides. "Count" is the failed-att
 | Username or password missing? | Username locked now? | Member with this username (any case)? | Pending registration with it? | Password matches what? | Member active? | Outcome | Count | Scenario |
 |---|---|---|---|---|---|---|---|---|
 | Yes | * | * | * | * | * | 400 VALIDATION_FAILED | unchanged | Missing username or password is invalid |
-| No | Yes | * | * | * | * | 429 AUTHENTICATION_LOCKED_OUT with retryAt | unchanged | A locked username is rejected even with the right password |
+| No | Yes | * | * | * | * | 429 RATE_LIMIT_LOGIN_LOCKED with retryAt | unchanged | A locked username is rejected even with the right password |
 | No | No | Yes | * | Member's password | Yes | 201 session started | reset to 0 | Successful login with the username in another case |
 | No | No | Yes | * | Member's password | No | 403 AUTHORIZATION_ACCOUNT_DEACTIVATED | unchanged | Deactivated member with a matching password is denied |
 | No | No | Yes | * | Not the member's password | * | 401 AUTHENTICATION_FAILED, or 429 if this is the 5th failure | +1 | Wrong password fails with the generic message |

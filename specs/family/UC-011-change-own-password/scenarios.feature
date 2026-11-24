@@ -47,3 +47,10 @@ Feature: Change own password
   Scenario: Change without a session token is unauthenticated
     When the app changes the password without a session token, current password "voetbal2015" and new password "keeper2026"
     Then the response status is 401 with error code "AUTHENTICATION_REQUIRED"
+
+  @edge-case
+  Scenario: Concurrent login with the old password and password change leave no extra session
+    When someone logs in as "Jip_2015" with password "voetbal2015" and the app changes the password with token "telefoon-token-1", current password "voetbal2015" and new password "keeper2026" at the same moment
+    Then the change gets response status 204
+    And the login gets either response status 201 or response status 401 with error code "AUTHENTICATION_FAILED"
+    And the only session "Jip_2015" holds afterwards is the one with token "telefoon-token-1"

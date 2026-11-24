@@ -58,3 +58,10 @@ Feature: Reset a member's password
     When the app resets the password of member "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" with token "sanne-token-1" to "nieuwjaar2027"
     Then the response status is 404 with error code "NOT_FOUND_MEMBER"
     And the error message is "That family member does not exist."
+
+  @edge-case
+  Scenario: Concurrent login with the old password and reset leave no live session
+    When someone logs in as "Jip_2015" with password "voetbal2015" and the app resets the password of member "4e2a9c7b-1d5f-4b3a-8c6e-9a0b2d4f6e81" with token "sanne-token-1" to "nieuwjaar2027" at the same moment
+    Then the reset gets response status 204
+    And the login gets either response status 201 or response status 401 with error code "AUTHENTICATION_FAILED"
+    And "Jip_2015" has no session afterwards, so any token the login returned gets 401 "AUTHENTICATION_REQUIRED"

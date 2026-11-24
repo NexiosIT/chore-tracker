@@ -64,7 +64,7 @@ sections:
             props:
               variant: error
               source: error.message
-              retry_at: shown as local time from error.retryAt when code is AUTHENTICATION_LOCKED_OUT, for example "Try again at 14:32"
+              retry_at: shown as local time from error.retryAt when code is RATE_LIMIT_LOGIN_LOCKED, for example "Try again at 14:32"
           - name: LoginButton
             type: button
             tokens:

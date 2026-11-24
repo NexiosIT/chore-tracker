@@ -75,7 +75,7 @@ Every family member gets their own username-and-password login. On a fresh insta
 | Password maximum | 64, 128, none | 64 characters | Caps hashing cost and fits bcrypt. |
 | API path style | Unversioned, versioned | Unversioned resource paths under /api | A single app and a single API ship together. |
 | Login attempts with a matching password on a pending, rejected or deactivated account | Count, do not count | Not counted, and the count is not reset | The password was right; the lockout is against guessing. |
-| Lockout status code | 429, 401, 403 | 429 with retryAt | Clear for the app. Needs a rate-limit category in STD-002. |
+| Lockout status code | 429, 401, 403 | 429 with retryAt | Clear for the app. Uses the `rate_limit` category added in STD-002 1.2.0 (code RATE_LIMIT_LOGIN_LOCKED, Retry-After header). |
 | What the fifth failure returns | Incorrect message, lockout message | Lockout message with retryAt | The person learns at once when to try again. |
 | Wrong current password on change own password | Field error, separate 422, counts toward the lockout | Field error on currentPassword; not counted toward the lockout | Shown with the other field errors; the caller already holds a session. |
 | Parent resetting their own password | Allow, refuse | Refused; use change password | The brief scopes reset to another member, and change password checks the current one. |

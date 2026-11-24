@@ -161,10 +161,7 @@ scope_boundaries:
     - Home view content per role — defined by later features.
     - Multiple families — the system serves a single family.
 risk_tier: elevated
-risk_tier_basis:
-  - 'unresolved registry entity: ''session'' (bound by UC-001) does not resolve in the domain registry'
-  - 'unresolved registry entity: ''login-lockout'' (bound by UC-003) does not resolve in the domain registry'
-  - 'unresolved registry entity: ''session-end-record'' (bound by UC-004) does not resolve in the domain registry'
+risk_tier_basis: []
 risk_answers:
   ddl_privilege: 'yes'
   authz_session: 'yes'
